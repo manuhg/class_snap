@@ -1,6 +1,6 @@
 import time
 import cv2
-from predictor import predictor
+from detector import detector
 
 def extract_frames(input_file,class_labels,dest_dir='.',show_popup=False):
   cap = cv2.VideoCapture(input_file)
@@ -17,7 +17,7 @@ def extract_frames(input_file,class_labels,dest_dir='.',show_popup=False):
     ret, frame = cap.read()
     i+=1
     if ret == True:
-      frame,class_labels_matched = predictor.get_predictions(frame,class_labels)
+      frame,class_labels_matched = detector.get_detections(frame,class_labels)
       if class_labels_matched:
         opfname = input_file_name+'-'+str(int(i/fps))+':'+str(i%fps)+'.jpg'
         labels_matched.update({opfname:class_labels_matched})

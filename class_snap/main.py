@@ -1,7 +1,7 @@
-import os,sys
+import os,sys,argparse
 import json
 from extractor import extract_frames
-
+from compare import compare_models
 def get_input_data(dir_name,class_lalbels_file,allowed_file_types={'mp4':True,'avi':True}):
   with open(class_lalbels_file,"r") as labels_file:
     labels_str = labels_file.read()
@@ -11,18 +11,21 @@ def get_input_data(dir_name,class_lalbels_file,allowed_file_types={'mp4':True,'a
     return input_video_files,class_labels_to_filter
   print('error opening '+class_lalbels_file)
 
-def compare_models():
-  models = ['yolov2','yolov2-tiny','yolov3-tiny','ssdlite_mobilenet']
-  results = {}
-  for model in models:
-    result = run_predictions(model) #TODO run_predictions()
-    results.update(result)
-    results_statistical_diff() #TODO results_statistical_diff()
+def parse_args():
+  parser = argparse.ArgumentParser(description='Tool to extract frames of a video containing specified object(s)')
+  parser.add_argument('--videos_dir',dest='videos_dir',help='Directory/Folder Containing input video file(s)',default='videos',type=str)
+  parser.add_argument('--class_labels',dest='class_labels_file',help='Object class labels to filter frames',default='class_labels.txt',type=str)
+  parser.add_argument('--output_dir',dest='output_dir',help='Destination Directory/Folder for output',default='output',type=str)
+  return parser.parse_args()
 
 def main():
   dest_dir = '.'
   if len(sys.argv) >= 3:
     #TODO ADD functionality to use zip files as i/p and o/p instead of dir later on
+    #args = parse_args()
+    #videos_dir=args.videos_dir
+    #class_labels_file=args.class_labels_file
+    #output_dir=args.output_dir
     dir_name = sys.argv[1]
     class_labels_file = sys.argv[2]
     if len(sys.argv)>3:
