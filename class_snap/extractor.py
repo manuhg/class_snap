@@ -9,7 +9,7 @@ def extract_frames(input_file,class_labels,dest_dir='.',interval=None): #interva
   if (cap.isOpened()== False): 
     print("Error opening video file",input_file)
   i,count = 0,0
-  fps = video.get(cv2.CAP_PROP_FPS)
+  fps = cap.get(cv2.CAP_PROP_FPS)
   input_file_name =  '.'.join(input_file.split('.')[:-1])
   
   t1 = time.time()
@@ -20,10 +20,11 @@ def extract_frames(input_file,class_labels,dest_dir='.',interval=None): #interva
     if interval:
       cap.set(cv2.CAP_PROP_POS_MSEC,interval)
     ret, frame = cap.read()
+    frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
     i+=1
     if ret == True:
       opfname = input_file_name+'-'+str(int(i/fps))+':'+str(i%fps)+'.jpg'
-      class_labels_matched = detector.get_detections(frame,class_labels,dest_dir+opfname)
+      class_labels_matched = detector(frame,class_labels,dest_dir+opfname)
       count+=1
       if class_labels_matched:
         labels_matched.update({opfname:class_labels_matched})
