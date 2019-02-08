@@ -1,7 +1,8 @@
+#!/usr/bin/python3
 import os,sys,argparse
 import json
-from extractor import extract_frames
-from compare import compare_models
+#from extractor import extract_frames
+#from compare import compare_models
 def get_input_data(dir_name,class_lalbels_file,allowed_file_types={'mp4':True,'avi':True}):
   with open(class_lalbels_file,"r") as labels_file:
     labels_str = labels_file.read()
@@ -18,15 +19,25 @@ def parse_args():
   parser.add_argument('--output_dir',dest='output_dir',help='Destination Directory/Folder for output',default='output',type=str)
   return parser.parse_args()
 
-required_envs={'ssd':'models/ss/env_dir'}
+def exec_cmd(cmd_str,echo=True):
+  print(os.popen(cmd_str).read()+'\n' if echo else '',end='')
+
+required_envs={'ssd':{'name':'ssd','dir':'models/ssd','env_dir':'env_dir','env_script':'prepare_env.sh'}}
 def main():
   dest_dir = '.'
-  model ='ssd'
-  env_dir = os.getcwd()+'/'+required_envs[model]
+  model_name = 'ssd'
+  model = required_envs[model_name]
+  model_dir = model['dir']+'/'
+  env_dir = model_dir+model['env_dir']
+  
   if os.path.isdir(env_dir):
     print('\nRequired environment for '+model+' found. Skipping setup.')
   else:
     print('setting up '+env_dir)
+    exec_cmd('rm -rf '+model['env_dir'])
+    exec_cmd('mkdir '+model['env_dir']) #make a local dir, do all stuff then move it to models/<model_name>/
+    exec_cmd('cp '+model_dir+model['env_script']+' '+model['env_dir']+'/')#copy the models/<model name>/<script> to the local dir
+    exec_cmd('cd '+model_dir+' && bash '+model['env_script'])
   if len(sys.argv) >= 3:
     pass
     #TODO ADD functionality to use zip files as i/p and o/p instead of dir later on
@@ -49,5 +60,5 @@ def main():
   else:
     print('Format:\npython main.py <directory/zip file containing input videos> <text file containing class labels to filter> <destination (optional) > ')
 
-if __name__ == "main":
-  main()
+#if __name__ == "main":
+main()
