@@ -1,5 +1,3 @@
-#!/bin/bash
-#rm -rf *
 git clone --recursive https://github.com/tensorflow/models.git md
 git clone https://github.com/cocodataset/cocoapi.git
 cd cocoapi/PythonAPI && make && cp -rv pycocotools ../../md/research/
