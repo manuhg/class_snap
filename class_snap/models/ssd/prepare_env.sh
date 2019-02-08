@@ -6,7 +6,7 @@ cd md/research && python setup.py install
 cd md/research/slim && python setup.py install
 cd md/research && python object_detection/builders/model_builder_test.py
 mv -v md/research/* ./
-#mv md/research/object_detection ./'
+#mv md/research/object_detection ./
 mv -v md/research/setup.py ./
 rm -rf md
 ls
