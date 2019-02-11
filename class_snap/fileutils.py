@@ -1,6 +1,7 @@
 # file_utils.py
 import os
 import six.moves.urllib as urllib
+import tarfile
 
 
 def exec_cmd(cmdstr, echo=True):

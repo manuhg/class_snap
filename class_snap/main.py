@@ -1,10 +1,12 @@
 #!/usr/bin/python3
+from extractor import extract_frames
 import os
 import sys
 import argparse
 import json
-sys.path.append('..')
-# from extractor import extract_frames
+from fileutils import *
+
+sys.path.append('.')
 # from compare import compare_models
 
 
@@ -46,8 +48,7 @@ def main():
     model = required_envs[model_name]
     model_dir = model['dir']+'/'
     env_dir = model_dir+model['env_dir']
-
-   if os.path.isdir(env_dir):
+    if os.path.isdir(env_dir):
         print('\nRequired environment for '+model+' found. Skipping setup.')
     else:
         print('setting up '+env_dir)
@@ -57,11 +58,13 @@ def main():
         # copy the models/<model name>/<script> to the local dir
         exec_cmd('cp '+model_dir+model['env_script']+' '+model['env_dir']+'/')
         exec_cmd('cd '+model_dir+' && bash '+model['env_script'])
-        input_file = download_file('https://github.com/manuhg/masknet/raw/master/input_video.mp4')
+        input_file = download_file(
+            'https://github.com/manuhg/masknet/raw/master/input_video.mp4')
         class_labels_to_filter_by = ['person']
         ssd_obj = ssd(True)
         ssd_obj.prepare(True)
-        labels_matched = extract_frames(ssd_obj, input_file, class_labels_to_filter_by, interval=2)
+        labels_matched = extract_frames(
+            ssd_obj, input_file, class_labels_to_filter_by, interval=2)
         create_zip('detections.zip', labels_matched.keys())
     if len(sys.argv) >= 3:
         pass
