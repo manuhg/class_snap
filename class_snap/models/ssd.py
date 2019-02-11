@@ -1,4 +1,5 @@
-from fileutils import *
+#from fileutils import *
+
 from PIL import Image
 from matplotlib import pyplot as plt
 from io import StringIO
@@ -14,8 +15,11 @@ import six.moves.urllib as urllib
 import os
 import numpy as np
 
+sys.path.append('..')
+from fileutils import download_file, extract_file_from_tar, exec_cmd
 
 class ssd:
+
     def __init__(self, prepared=False):
         self.name = 'SSD'
         self.prepared = prepared
@@ -43,7 +47,7 @@ class ssd:
         self.lalbels_file = os.path.join('data', 'mscoco_label_map.pbtxt')
         download_file(self.base_url + self.model_file, self.model_file)
         extract_file_from_tar(self.model_file, self.frozen_graph_name)
-        self.detection_graph = get_detection_graph(self.frozen_graph)
+        self.detection_graph = self.get_detection_graph(self.frozen_graph)
         self.category_index = label_map_util.create_category_index_from_labelmap(
             self.lalbels_file, use_display_name=True)
 
@@ -72,28 +76,32 @@ class ssd:
     def prepare_env(self):
         print('preparing environment')
         # env preparation since this notebook is being run as standalone
-        exec_cmd('rm -rf * ')
-        exec_cmd('git clone https://github.com/tensorflow/models.git md --recursive')
-        exec_cmd('git clone https://github.com/cocodataset/cocoapi.git')
+        #exec_cmd('rm -rf * ')
+        exec_cmd('mkdir env')
         exec_cmd(
-            'cd cocoapi/PythonAPI && make && cp -rv pycocotools ../../md/research/')
+            'git clone https://github.com/tensorflow/models.git env/md --recursive')
+        exec_cmd('git clone https://github.com/cocodataset/cocoapi.git env/cocoapi')
         exec_cmd(
-            'cd md/research && protoc object_detection/protos/*.proto --python_out=.')
-        exec_cmd('cd md/research && python setup.py install')
-        exec_cmd('cd md/research/slim && python setup.py install')
+            'cd env/cocoapi/PythonAPI && make && cp -rv pycocotools ../../md/research/')
         exec_cmd(
-            'cd md/research && python object_detection/builders/model_builder_test.py')
-        exec_cmd('mv -v md/research/* ./')
-        #exec_cmd('mv md/research/object_detection ./')
-        exec_cmd('mv -v md/research/setup.py ./')
-        exec_cmd('rm -rf md')
-        exec_cmd('ls')
-        exec_cmd('python object_detection/builders/model_builder_test.py')
+            'cd env/md/research && protoc object_detection/protos/*.proto --python_out=.')
+        exec_cmd('cd env/md/research && python setup.py install')
+        exec_cmd('cd env/md/research/slim && python setup.py install')
+        exec_cmd(
+            'cd env/md/research && python object_detection/builders/model_builder_test.py')
+        exec_cmd('mv -v env/md/research/* env/')
+        #exec_cmd('mv env/md/research/object_detection ./')
+        exec_cmd('mv -v env/md/research/setup.py env/')
+        exec_cmd('!ln -s env/object_detection/data data')
+        exec_cmd('rm -rf env/md')
+        exec_cmd('ls env/')
+        exec_cmd('python env/object_detection/builders/model_builder_test.py')
 
     def import_utils(self):
         try:
             sys.path.append("..")
-            sys.path.append("object_detection")
+            sys.path.append("env")
+            sys.path.append("env/object_detection")
             global utils_ops, utils, label_map_util, visualization_utils, vis_util
             from object_detection.utils import ops as utils_ops
             from object_detection import utils
