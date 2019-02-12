@@ -4,8 +4,8 @@ import os
 import sys
 import argparse
 import json
-from fileutils import download_file, extract_file_from_tar
-from models.ssd import ssd
+from fileutils import download_file, extract_file_from_tar, create_zip
+from detector import detector as det
 sys.path.append('.')
 # from compare import compare_models
 
@@ -34,35 +34,34 @@ def parse_args():
     return parser.parse_args()
 
 
-required_envs = {'ssd': {'name': 'ssd', 'dir': 'models/ssd',
-                         'env_dir': 'env_dir', 'env_script': 'prepare_env.sh'}}
+# {"annotation": {"data_filename": "1.jpg", "data_type": "image", "data_annotation": {"bounding_polygon": [], "bounding_box": [{"classification_label": "label1", "point_2D": ["98,192", "185,278"]}, {
+#     "classification_label": "label2", "point_2D": ["282,153", "364,293"]}, {"classification_label": "label2", "point_2D": ["421,152", "508,250"]}, {"classification_label": "label1", "point_2D": ["144,70", "213,147"]}]}}}
+
+
+def convert_to_annotations(fname, output):  # call once per file
+    annotations = {'annotation': {'data_filename': fname, 'data_type': 'image', 'data_annotation': {'bounding_polygon': [], 'bounding_box': ''}}
+    regions = None
+    for item in output.items():
+        regions = ''
+    annotations['annotation']['data_annotation']['bounding_box'] = regions
 
 
 def main():
-    dest_dir = '.'
-    model_name = 'ssd'
-    model = required_envs[model_name]
-    model_dir = model['dir']+'/'
-    env_dir = model_dir+model['env_dir']
-    # if os.path.isdir(env_dir):
-    #    print('\nRequired environment for '+model+' found. Skipping setup.')
-    # else:
-    #print('setting up '+env_dir)
-    #exec_cmd('rm -rf '+model['env_dir'])
-    # make a local dir, do all stuff then move it to models/<model_name>/
-    #exec_cmd('mkdir '+model['env_dir'])
-    # copy the models/<model name>/<script> to the local dir
-    #exec_cmd('cp '+model_dir+model['env_script']+' '+model['env_dir']+'/')
-    #exec_cmd('cd '+model_dir+' && bash '+model['env_script'])
     input_file = download_file(
         'https://github.com/manuhg/masknet/raw/master/input_video.mp4')
     class_labels_to_filter_by = ['person']
+    annotations_file = 'annotations.json'
     prepared = True
-    ssd_obj = ssd(prepared)
-    ssd_obj.prepare(prepared)
-    labels_matched = extract_frames(
-        ssd_obj, input_file, class_labels_to_filter_by, interval=2)
-    create_zip('detections.zip', labels_matched.keys())
+    detector = det('ssd')
+    detector_model_class = detector.get_model_class()
+    detector_model = detector_model_class(prepared)
+    detector_model.prepare(prepared)
+    output = extract_frames(
+        detector_model, input_file, class_labels_to_filter_by, interval=2)
+    with open(annotations_file, 'w+') as af:
+        json.dump(output, af)
+    output.update({annotations_file: annotations_file})
+    create_zip('detections.zip', output.keys())
     # if len(sys.argv) >= 3:
     #   pass
     # TODO ADD functionality to use zip files as i/p and o/p instead of dir later on

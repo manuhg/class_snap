@@ -1,22 +1,20 @@
-import os,sys
-class Predictor:
-    datasets = {'voc': 'voc', 'imagenet': 'imagenet', 'coco': {
-        'name': 'coco', 'url': 'https://github.com/cocodataset/cocoapi.git','prepare':self.prepare_coco}}
-    dataset = datasets['coco']
-    def execcmd(self,command_str,echo=True):
-        opstr = os.popen(command_str).read()
-        if echo:
-            print(opstr)
-        #return opstr
-
-    def prepare_coco(self):
-        dataset=self.datasets['coco']
-        self.execcmd('git clone '+dataset['url']+' '+dataset['name'])
+import os
+import sys
+from models.ssd import ssd
+from models.yolo import yolo
 
 
+class detector:
+    models = {'ssd': {'name': 'ssd', 'variant': ''},
+              'yolo': {'name': 'yolo', 'variant': 'v2'}}
+    datasets = ['voc', 'imagenet', 'coco']
+    dataset = datasets[-1]
 
-    
+    def __init__(self, model_name):
+        self.models['ssd']['model'] = ssd
+        self.models['yolo']['model'] = yolo
+        self.model_name = model_name if model_name else 'ssd'
+        self.model = self.models[self.model_name]
 
-    def prepare_dataset(self, dataset=self.dataset):
-        git clone https: // github.com/cocodataset/cocoapi.git
-    cd cocoapi/PythonAPI
+    def get_model_class(self):
+        return self.model['model']

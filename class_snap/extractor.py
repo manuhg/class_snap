@@ -10,7 +10,7 @@ def extract_frames(detector, input_file, class_labels, interval=None, dest_dir='
         detector.name, detector.model_name, input_file, interval))
     interval = interval * 1000  # convert to milliseconds
     cap = cv2.VideoCapture(input_file)
-    labels_matched = {}  # format: File name : [list of matched labels]
+    output = {}  # format: File name : [list of matched labels]
     if (cap.isOpened() == False):
         print("Error opening video file", input_file)
     i, count = 0, 0
@@ -36,15 +36,15 @@ def extract_frames(detector, input_file, class_labels, interval=None, dest_dir='
                 '-'+str(int(i/fps))+':'+str(i % fps)+'.jpg'
 
             t1 = time.time()
-            class_labels_matched = detector.detect(
+            result = detector.detect(
                 frame, dest_dir+opfname, class_labels)
             t2 = time.time()
             count += 1
             duration = t2-t1
             total_duration += duration
-            if class_labels_matched:
-                labels_matched.update(
-                    {opfname: {'labels_matched': class_labels_matched, 'time': duration}})
+            if result:
+                result.update({'time': duration})
+                output.update({opfname: result})
         else:
             break
 
@@ -55,4 +55,4 @@ def extract_frames(detector, input_file, class_labels, interval=None, dest_dir='
         print('No frames were processed')
     cap.release()
     cv2.destroyAllWindows()
-    return labels_matched
+    return output

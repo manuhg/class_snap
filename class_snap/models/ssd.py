@@ -1,5 +1,6 @@
 #from fileutils import *
 
+from fileutils import download_file, extract_file_from_tar, exec_cmd
 from PIL import Image
 from matplotlib import pyplot as plt
 from io import StringIO
@@ -14,14 +15,16 @@ import sys
 import six.moves.urllib as urllib
 import os
 import numpy as np
+#from fileutils import *
 
 sys.path.append('..')
-from fileutils import download_file, extract_file_from_tar, exec_cmd
+
 
 class ssd:
 
     def __init__(self, prepared=False):
         self.name = 'SSD'
+        self.env_dir = 'env_' + self.name
         self.prepared = prepared
         self.base_url = 'http://download.tensorflow.org/models/object_detection/'
         self.available_models = ['ssd_mobilenet_v1_coco_2017_11_17',
@@ -51,57 +54,58 @@ class ssd:
         self.category_index = label_map_util.create_category_index_from_labelmap(
             self.lalbels_file, use_display_name=True)
 
-    def detect(self, image, opfile, class_labels_to_filter, detection_graph=None, category_index=None):
+    def detect(self, image, opfile, class_labels_to_filter, detection_graph=None, category_index=None, visualize=False):
         print(' '+opfile.split('/')[-1], end=' ')
         detection_graph = self.detection_graph if not detection_graph else detection_graph
         category_index = self.category_index if not category_index else category_index
         image_np = image
-        # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
-        image_np_expanded = np.expand_dims(image_np, axis=0)
         # Actual detection.
         output_dict = self.run_inference_for_single_image(
             image_np, detection_graph)
         # Visualization of the results of a detection.
-        class_labels_detected = [category_index[obj]['name']
-                                 for obj in output_dict['detection_classes']]
-        labels_matched = set(class_labels_detected) & set(
+        labels_detected = [category_index[obj]['name']
+                           for obj in output_dict['detection_classes']]
+        labels_matched = set(labels_detected) & set(
             class_labels_to_filter)
         print(labels_matched)
-        vis_util.visualize_boxes_and_labels_on_image_array(
-            image_np, output_dict['detection_boxes'], output_dict['detection_classes'], output_dict['detection_scores'],
-            category_index, instance_masks=output_dict.get('detection_masks'), use_normalized_coordinates=True, line_thickness=8)
+        if visualize:
+            vis_util.visualize_boxes_and_labels_on_image_array(image_np, output_dict['detection_boxes'], output_dict['detection_classes'], output_dict['detection_scores'],
+                                                               category_index, instance_masks=output_dict.get('detection_masks'), use_normalized_coordinates=True, line_thickness=8)
         cv2.imwrite(opfile, image_np)
-        return labels_matched
+        return {'labels_matched': labels_matched, 'output': output_dict}
 
     def prepare_env(self):
+        env_dir = self.env_dir
         print('preparing environment')
         # env preparation since this notebook is being run as standalone
         #exec_cmd('rm -rf * ')
-        exec_cmd('mkdir env')
+        exec_cmd('mkdir '+env_dir+'')
         exec_cmd(
-            'git clone https://github.com/tensorflow/models.git env/md --recursive')
-        exec_cmd('git clone https://github.com/cocodataset/cocoapi.git env/cocoapi')
+            'git clone https://github.com/tensorflow/models.git '+env_dir+'/md --recursive')
         exec_cmd(
-            'cd env/cocoapi/PythonAPI && make && cp -rv pycocotools ../../md/research/')
+            'git clone https://github.com/cocodataset/cocoapi.git '+env_dir+'/cocoapi')
         exec_cmd(
-            'cd env/md/research && protoc object_detection/protos/*.proto --python_out=.')
-        exec_cmd('cd env/md/research && python setup.py install')
-        exec_cmd('cd env/md/research/slim && python setup.py install')
+            'cd '+env_dir+'/cocoapi/PythonAPI && make && cp -rv pycocotools ../../md/research/')
         exec_cmd(
-            'cd env/md/research && python object_detection/builders/model_builder_test.py')
-        exec_cmd('mv -v env/md/research/* env/')
-        #exec_cmd('mv env/md/research/object_detection ./')
-        exec_cmd('mv -v env/md/research/setup.py env/')
-        exec_cmd('!ln -s env/object_detection/data data')
-        exec_cmd('rm -rf env/md')
-        exec_cmd('ls env/')
-        exec_cmd('python env/object_detection/builders/model_builder_test.py')
+            'cd '+env_dir+'/md/research && protoc object_detection/protos/*.proto --python_out=.')
+        exec_cmd('cd '+env_dir+'/md/research && python setup.py install')
+        exec_cmd('cd '+env_dir+'/md/research/slim && python setup.py install')
+        exec_cmd(
+            'cd '+env_dir+'/md/research && python object_detection/builders/model_builder_test.py')
+        exec_cmd('mv -v '+env_dir+'/md/research/* '+env_dir+'/')
+        #exec_cmd('mv '+env_dir+'/md/research/object_detection ./')
+        exec_cmd('mv -v '+env_dir+'/md/research/setup.py '+env_dir+'/')
+        exec_cmd('!ln -s '+env_dir+'/object_detection/data data')
+        exec_cmd('rm -rf '+env_dir+'/md')
+        exec_cmd('ls '+env_dir+'/')
+        exec_cmd('python '+env_dir +
+                 '/object_detection/builders/model_builder_test.py')
 
     def import_utils(self):
         try:
             sys.path.append("..")
-            sys.path.append("env")
-            sys.path.append("env/object_detection")
+            sys.path.append(self.env_dir)
+            sys.path.append(self.env_dir+'/object_detection')
             global utils_ops, utils, label_map_util, visualization_utils, vis_util
             from object_detection.utils import ops as utils_ops
             from object_detection import utils
