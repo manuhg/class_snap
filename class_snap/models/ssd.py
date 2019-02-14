@@ -21,10 +21,14 @@ import_file_utils() # comment this line while running on notebooks
 
 class ssd:
 
-    def __init__(self, prepared=False):
+    def __init__(self, prepared=False,env_parent='models/env/'):
         self.name = 'SSD'
         self.env_dir = 'env_' + self.name
         self.pretrained_models_dir = 'pretrained'
+        if env_parent:
+            exec_cmd('mkdir -p '+env_parent)
+            self.env_dir = env_parent + self.env_dir
+            self.pretrained_models_dir = env_parent + self.pretrained_models_dir
         self.prepared = prepared
         self.base_url = 'http://download.tensorflow.org/models/object_detection/'
         self.available_models = ['ssd_mobilenet_v1_coco_2017_11_17',

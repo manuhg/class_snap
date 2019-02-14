@@ -5,7 +5,7 @@ import sys
 import argparse
 import json
 from fileutils import download_file, extract_file_from_tar, create_zip
-from detector import detector as det
+from detector import detector
 sys.path.append('.')
 # from compare import compare_models
 
@@ -91,5 +91,5 @@ def main():
     #    print('Format:\npython main.py <directory/zip file containing input videos> <text file containing class labels to filter> <destination (optional) > ')
 
 
-if __name__ == "main":
+if __name__ == "__main__":
     main()
