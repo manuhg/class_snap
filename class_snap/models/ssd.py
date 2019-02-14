@@ -134,8 +134,7 @@ class ssd:
         category_index = self.category_index if not category_index else category_index
         image_np = image
         # Actual detection.
-        output_dict = self.run_inference_for_single_image(
-            image_np, detection_graph)
+        output_dict = self.run_inference_for_single_image(image_np, detection_graph)
         # Visualization of the results of a detection.
         labels_detected = [category_index[obj]['name']
                            for obj in output_dict['detection_classes']]
@@ -173,14 +172,12 @@ class ssd:
             with tf.Session() as sess:
                 # Get handles to input and output tensors
                 ops = tf.get_default_graph().get_operations()
-                all_tensor_names = {
-                    output.name for op in ops for output in op.outputs}
+                all_tensor_names = {output.name for op in ops for output in op.outputs}
                 tensor_dict = {}
                 for key in ['num_detections', 'detection_boxes', 'detection_scores', 'detection_classes', 'detection_masks']:
                     tensor_name = key + ':0'
                     if tensor_name in all_tensor_names:
-                        tensor_dict[key] = tf.get_default_graph(
-                        ).get_tensor_by_name(tensor_name)
+                        tensor_dict[key] = tf.get_default_graph().get_tensor_by_name(tensor_name)
                 if 'detection_masks' in tensor_dict:
                     # The following processing is only for single image
                     detection_boxes = tf.squeeze(

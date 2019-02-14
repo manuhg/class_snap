@@ -47,13 +47,11 @@ class extractor:
         exec_cmd('mkdir -p '+meta_dir)
         exec_cmd('cp '+' '.join([dest_dir+'/'+f for f in list(output.keys())])+' '+data_dir)
         exec_cmd('cp '+' '.join(json_files)+' '+meta_dir)
+        #create zip
+        exec_cmd('zip '+zip_name+' -r '+opdir)
+
         if del_after:
             exec_cmd('rm -rf '+dest_dir)
-
-        #create zip
-        print((zip_name,opdir))
-        exec_cmd('zip '+zip_name+' -r '+opdir)
-        exec_cmd('zip -r a'+zip_name+' . -i '+opdir)
     
     def extract_frames(self,detector, input_file, class_labels, interval=None, dest_dir='.'):# interval if specified should be in terms of seconds
         print('Detection Algorithm:%s\nModel loaded: %s\nInput File: %s\nIntervals at which to detect: %r seconds' % (detector.name, detector.model_name, input_file, interval))
