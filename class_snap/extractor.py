@@ -11,7 +11,7 @@ class extractor:
         self.prepare()
         self.load()
     
-    def prepare(self,detector_model_name='detector_model_name'):
+    def prepare(self,detector_model_name='ssd'):
         detector_model_name = detector_model_name if detector_model_name else self.detector_model_name
         detector_model_name = detector_model_name if detector_model_name else 'ssd'
         self.detector_model_name = detector_model_name
