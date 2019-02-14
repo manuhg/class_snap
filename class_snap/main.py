@@ -24,30 +24,22 @@ def get_input_data(input_video, class_labels_file,input_videos_dir=None, allowed
         print('error opening '+class_labels_file,'\n',e)
     return input_video_files, class_labels_to_filter
 
-def parse_args():
-    global parser
-    parser = argparse.ArgumentParser(
-        description='Tool to extract frames of a video containing specified object(s)')
-    parser.add_argument('-i','--input_video', dest='input_video',
-                        help='input video file(s)', default='input_video.mp4', type=str)
-    parser.add_argument('-t','--interval', dest='interval',
-                        help='recuring interval (in seconds) at which to take a frame and process', default=1, type=int)                        
-    parser.add_argument('-id','--input_videos_dir', dest='input_videos_dir',
-                        help='Directory Containing input video file(s)', default='videos', type=str)
-    parser.add_argument('-c','--class_labels', dest='class_labels_file',
-                        help='Object class labels to filter frames', default='class_labels.txt', type=str,required=True)
-    parser.add_argument('-od','--output_dir', dest='output_dir',
-                        help='Destination Directory for output', default='output', type=str)
-    parser.add_argument('-o','--output_file', dest='zip_name',
-                        help='Output zip name', default='detections.zip', type=str)
-    return parser.parse_args()
+def build_args_parser():
+    parser = argparse.ArgumentParser(description='Tool to extract frames of a video containing specified object(s)')
+    parser.add_argument('-i','--input_video', dest='input_video',help='input video file(s)', default='input_video.mp4', type=str)
+    parser.add_argument('-t','--interval', dest='interval',help='recuring interval (in seconds) at which to take a frame and process', default=1, type=int)                        
+    parser.add_argument('-id','--input_videos_dir', dest='input_videos_dir',help='Directory Containing input video file(s)', default='videos', type=str)
+    parser.add_argument('-c','--class_labels', dest='class_labels_file',help='Object class labels to filter frames', default='class_labels.txt', type=str,required=True)
+    parser.add_argument('-od','--output_dir', dest='output_dir',help='Destination Directory for output', default='output', type=str)
+    parser.add_argument('-o','--output_file', dest='zip_name',help='Output zip name', default='detections.zip', type=str)
+    return parser
 
 def main():
-    #class_labels_to_filter_by = []
     #input_file = download_file('https://github.com/manuhg/masknet/raw/master/input_video.mp4',nc=True)
-    #interval = 1    
+    #interval = 1
+    parser = build_args_parser()  
     if len(sys.argv) >= 3:
-        args = parse_args()
+        args = parser.parse_args()()
         input_video,input_videos_dir = args.input_video, args.input_videos_dir
         output_dir, class_labels_file = args.output_dir, args.class_labels_file
         interval, zip_name = args.interval, args.zip_name
