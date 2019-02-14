@@ -22,10 +22,11 @@ class extractor:
     def load(self):
         self.detector_model.load()
 
-    def process(self,input_file,class_labels_to_filter_by,interval=1,dest_dir='output',zip_name='detections.zip'):
+    def process(self,input_file,class_labels_to_filter_by,interval=1,dest_dir='output',zip_name='detections.zip',del_after=True):
         #process
         self.class_labels_to_filter_by = class_labels_to_filter_by
         self.interval = interval
+        dest_dir = dest_dir if dest_dir else 'output'
         self.dest_dir = dest_dir
 
         #detection / extraction
@@ -46,6 +47,8 @@ class extractor:
         exec_cmd('mkdir -p '+meta_dir)
         exec_cmd('cp '+' '.join([dest_dir+'/'+f for f in list(output.keys())])+' '+data_dir)
         exec_cmd('cp '+' '.join(json_files)+' '+meta_dir)
+        if del_after:
+            exec_cmd('rm -rf '+dest_dir)
 
         #create zip
         exec_cmd('zip '+zip_name+' -r '+opdir)
