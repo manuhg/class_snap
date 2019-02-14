@@ -7,7 +7,6 @@ import zipfile
 
 def exec_cmd(cmdstr,echo=True):
   print(os.popen(cmdstr).read() if echo else '',end='')
-  return True
   
 def download_file(url,filename=None,nc=False):#nc no clobber i.e dont download if file exists
   if nc:

@@ -4,7 +4,7 @@ import os
 import sys
 import argparse
 import json
-from fileutils import download_file, extract_file_from_tar, create_zip
+from fileutils import download_file, exec_cmd
 from detector import detector
 sys.path.append('.')
 # from compare import compare_models
