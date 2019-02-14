@@ -46,22 +46,42 @@ def convert_to_annotations(fname, output):  # call once per file
     annotations['annotation']['data_annotation']['bounding_box'] = regions
 
 
+
+def process(class_labels_to_filter_by,input_file,interval,detector_model_name='ssd',dest_dir='output',zip_name='detections.zip'):
+    #preparation
+    #class_labels_to_filter_by = ['person']
+    #input_file=download_file('https://github.com/manuhg/masknet/raw/master/input_video.mp4',nc=True)
+    detector_model = detector(detector_model_name).get_model()
+    detector_model.prepare()
+
+    #detection / extraction
+    dest_dir = 'output'
+    exec_cmd('mkdir '+dest_dir)
+    output = extract_frames(detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=dest_dir)
+    
+    #annotation
+    json_files,failures = save_as_annotations(output,dest_dir)
+    if failures:
+        print('Failed to write: ',','.join(failures))
+    
+    #moving and re organisation as data and meta
+    opdir = dest_dir+'/detections'
+    data_dir = opdir+'/data'
+    meta_dir = opdir+'/meta'
+    exec_cmd('rm -rf '+opdir)
+    exec_cmd('mkdir -p '+data_dir)
+    exec_cmd('mkdir -p '+meta_dir)
+    exec_cmd('cp '+' '.join([dest_dir+'/'+f for f in list(output.keys())])+' '+data_dir)
+    exec_cmd('cp '+' '.join(json_files)+' '+meta_dir)
+
+    #create zip
+    exec_cmd('zip '+zip_name+' -r '+opdir)
+
 def main():
-    input_file = download_file(
-        'https://github.com/manuhg/masknet/raw/master/input_video.mp4')
     class_labels_to_filter_by = ['person']
-    annotations_file = 'annotations.json'
-    prepared = True
-    detector = det('ssd')
-    detector_model_class = detector.get_model_class()
-    detector_model = detector_model_class(prepared)
-    detector_model.prepare(prepared)
-    output = extract_frames(
-        detector_model, input_file, class_labels_to_filter_by, interval=2)
-    with open(annotations_file, 'w+') as af:
-        json.dump(output, af)
-    output.update({annotations_file: annotations_file})
-    create_zip('detections.zip', output.keys())
+    input_file=download_file('https://github.com/manuhg/masknet/raw/master/input_video.mp4',nc=True)
+    interval = 100
+    process(class_labels_to_filter_by,input_file,interval)
     # if len(sys.argv) >= 3:
     #   pass
     # TODO ADD functionality to use zip files as i/p and o/p instead of dir later on
@@ -85,5 +105,5 @@ def main():
     #    print('Format:\npython main.py <directory/zip file containing input videos> <text file containing class labels to filter> <destination (optional) > ')
 
 
-# if __name__ == "main":
-main()
+if __name__ == "main":
+    main()

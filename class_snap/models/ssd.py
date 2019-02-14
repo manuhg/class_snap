@@ -1,58 +1,122 @@
-#from fileutils import *
-
-from fileutils import download_file, extract_file_from_tar, exec_cmd
-from PIL import Image
-from matplotlib import pyplot as plt
-from io import StringIO
-from collections import defaultdict
 from distutils.version import StrictVersion
-import cv2
-import time
-import zipfile
-import tensorflow as tf
-import tarfile
-import sys
-import six.moves.urllib as urllib
-import os
+import os,sys,time
 import numpy as np
-#from fileutils import *
+import tensorflow as tf
+import cv2
 
-sys.path.append('..')
+#from PIL import Image
+#from matplotlib import pyplot as plt
+#from io import StringIO
+#from collections import defaultdict
 
+def import_file_utils():
+  try:
+    sys.path.append('..')
+    global download_file, extract_file_from_tar, exec_cmd
+    from fileutils import download_file, extract_file_from_tar, exec_cmd
+  except Exception as e:
+    print('Unable to import fileutils')
+
+import_file_utils() # comment this line while running on notebooks
 
 class ssd:
 
     def __init__(self, prepared=False):
         self.name = 'SSD'
         self.env_dir = 'env_' + self.name
+        self.pretrained_models_dir = 'pretrained'
         self.prepared = prepared
         self.base_url = 'http://download.tensorflow.org/models/object_detection/'
         self.available_models = ['ssd_mobilenet_v1_coco_2017_11_17',
                                  'ssd_resnet50_v1_fpn_shared_box_predictor_640x640_coco14_sync_2018_07_03', 'faster_rcnn_nas_coco_2018_01_28']
+        
         self.model_name = self.available_models[-1]
         self.model_file = self.model_name + '.tar.gz'
+        self.model_file_path = self.pretrained_models_dir + '/' +self.model_file
+        
         self.frozen_graph_name = 'frozen_inference_graph.pb'
-        self.frozen_graph = self.model_name + '/' + self.frozen_graph_name
+        self.frozen_graph_dir = self.pretrained_models_dir + '/' +self.model_name + '/'
+        self.frozen_graph = self.frozen_graph_dir + self.frozen_graph_name
+        
 
         if StrictVersion(tf.__version__.split('-')[0]) < StrictVersion('1.9'):
             raise ImportError(
                 'Please upgrade your TensorFlow installation to v1.9.* or later!')
         print('Using OpenCV version %r and Tensorflow version %r' %
               (cv2.__version__, tf.__version__))
-
+        
+    def prepare_env(self):
+        env_dir = self.env_dir
+        print('preparing environment')
+        # env preparation since this notebook is being run as standalone
+        #exec_cmd('rm -rf * ')
+        t1 = time.time()
+        exec_cmd('mkdir '+self.pretrained_models_dir)
+        exec_cmd('mkdir '+env_dir+'')
+        exec_cmd('git clone https://github.com/tensorflow/models.git '+env_dir+'/md --recursive')
+        exec_cmd('git clone https://github.com/cocodataset/cocoapi.git '+env_dir+'/cocoapi')
+        exec_cmd('cd '+env_dir+'/cocoapi/PythonAPI && make && cp -rv pycocotools ../../md/research/')
+        exec_cmd('cd '+env_dir+'/md/research && protoc object_detection/protos/*.proto --python_out=.')
+        exec_cmd('cd '+env_dir+'/md/research && python setup.py install')
+        exec_cmd('cd '+env_dir+'/md/research/slim && python setup.py install')
+        exec_cmd('cd '+env_dir+'/md/research && python object_detection/builders/model_builder_test.py')
+        exec_cmd('mv -v '+env_dir+'/md/research/* '+env_dir+'/')
+        #exec_cmd('mv '+env_dir+'/md/research/object_detection ./')
+        exec_cmd('mv -v '+env_dir+'/md/research/setup.py '+env_dir+'/')
+        exec_cmd('ln -s '+env_dir+'/object_detection/data data')
+        exec_cmd('rm -rf '+env_dir+'/md')
+        print('\nTook ',time.time()-t1,'seconds to prepare environment')
+        #exec_cmd('ls '+env_dir+'/')
+        #exec_cmd('python '+env_dir +'/object_detection/builders/model_builder_test.py')
+    
+    def download_and_extract_graph(self):
+      download_file(self.base_url + self.model_file,self.model_file_path)
+      extract_file_from_tar(self.model_file_path, self.frozen_graph_name,self.pretrained_models_dir)
+        
     def prepare(self, prepared=None):
-        prepared = self.prepared if prepared is None else prepared
+        #prepared = self.prepared if prepared is None else prepared
+        ts = time.time()
+        prepared = self.import_utils()
         if not prepared:
+            print('Need to prepare environment')
             self.prepare_env()
+            self.prepared = self.import_utils()
         else:
             print('No need to prepare environment')
-        self.prepared = self.import_utils()
         self.lalbels_file = os.path.join('data', 'mscoco_label_map.pbtxt')
-        download_file(self.base_url + self.model_file, self.model_file)
-        extract_file_from_tar(self.model_file, self.frozen_graph_name)
+        
+        if not os.path.isfile(self.frozen_graph):
+          self.download_and_extract_graph()
         self.detection_graph = self.get_detection_graph(self.frozen_graph)
+        if self.detection_graph is None:
+          self.download_and_extract_graph()
+          
         self.category_index = label_map_util.create_category_index_from_labelmap(
             self.lalbels_file, use_display_name=True)
+        tt = time.time() - ts
+        print('\nTotal time took for preparing '+self.env_dir+' and importing dependencies from it:',tt,'seconds ('+str(tt/60)+' minutes)')
+
+    def import_utils(self):
+        try:
+            if not os.path.isdir(self.env_dir):
+              return False
+            sys.path.append(".")
+            sys.path.append("..")
+            sys.path.append(self.env_dir)
+            sys.path.append(self.env_dir+'/object_detection')
+            global utils_ops, utils, label_map_util, visualization_utils, vis_util
+            from object_detection.utils import ops as utils_ops
+            from object_detection import utils
+            from utils import label_map_util
+            from utils import visualization_utils as vis_util
+            print('Done importing utils')
+            
+            exec_cmd('cp -rv object_detection/* ./')    
+        except Exception as e:
+            print('\n\nError importing from environment from '+self.env_dir+': ', e)
+            return False
+        return True
+
 
     def detect(self, image, opfile, class_labels_to_filter, detection_graph=None, category_index=None, visualize=False):
         print(' '+opfile.split('/')[-1], end=' ')
@@ -72,52 +136,27 @@ class ssd:
             vis_util.visualize_boxes_and_labels_on_image_array(image_np, output_dict['detection_boxes'], output_dict['detection_classes'], output_dict['detection_scores'],
                                                                category_index, instance_masks=output_dict.get('detection_masks'), use_normalized_coordinates=True, line_thickness=8)
         cv2.imwrite(opfile, image_np)
-        return {'labels_matched': labels_matched, 'output': output_dict}
+        
+        bboxes_denormalized = list(map(lambda boxes:self.denormalize(boxes,image_np.shape),output_dict['detection_boxes']))        
+        output_dict = self.clean_up_entry({'bounding_boxes':bboxes_denormalized,'labels_detected':labels_detected})
+        if output_dict:
+          return {'labels_matched': labels_matched, 'output': output_dict}
+      
+    def denormalize(self,box,imshape):
+      im_width,im_height,im_channels = imshape
+      ymin, xmin, ymax, xmax = box
+      return (xmin * im_width, xmax * im_width, ymin * im_height, ymax * im_height)
+    
+    def clean_up_entry(self,dct):
+      bbk,lbk = 'bounding_boxes','labels_detected'
+      bboxes = dct[bbk]
+      labels = dct[lbk]
+      bboxes = list(map(lambda b:list(map(lambda v:int(v), list(b))),bboxes))
+      bboxes = list(filter(lambda x: sum(x)>0,bboxes))
+      labels = labels[0:len(bboxes)]
+      if labels:
+        return {bbk:bboxes,lbk:labels}
 
-    def prepare_env(self):
-        env_dir = self.env_dir
-        print('preparing environment')
-        # env preparation since this notebook is being run as standalone
-        #exec_cmd('rm -rf * ')
-        exec_cmd('mkdir '+env_dir+'')
-        exec_cmd(
-            'git clone https://github.com/tensorflow/models.git '+env_dir+'/md --recursive')
-        exec_cmd(
-            'git clone https://github.com/cocodataset/cocoapi.git '+env_dir+'/cocoapi')
-        exec_cmd(
-            'cd '+env_dir+'/cocoapi/PythonAPI && make && cp -rv pycocotools ../../md/research/')
-        exec_cmd(
-            'cd '+env_dir+'/md/research && protoc object_detection/protos/*.proto --python_out=.')
-        exec_cmd('cd '+env_dir+'/md/research && python setup.py install')
-        exec_cmd('cd '+env_dir+'/md/research/slim && python setup.py install')
-        exec_cmd(
-            'cd '+env_dir+'/md/research && python object_detection/builders/model_builder_test.py')
-        exec_cmd('mv -v '+env_dir+'/md/research/* '+env_dir+'/')
-        #exec_cmd('mv '+env_dir+'/md/research/object_detection ./')
-        exec_cmd('mv -v '+env_dir+'/md/research/setup.py '+env_dir+'/')
-        exec_cmd('!ln -s '+env_dir+'/object_detection/data data')
-        exec_cmd('rm -rf '+env_dir+'/md')
-        exec_cmd('ls '+env_dir+'/')
-        exec_cmd('python '+env_dir +
-                 '/object_detection/builders/model_builder_test.py')
-
-    def import_utils(self):
-        try:
-            sys.path.append("..")
-            sys.path.append(self.env_dir)
-            sys.path.append(self.env_dir+'/object_detection')
-            global utils_ops, utils, label_map_util, visualization_utils, vis_util
-            from object_detection.utils import ops as utils_ops
-            from object_detection import utils
-            from utils import label_map_util
-            from utils import visualization_utils as vis_util
-
-            if not self.prepared:
-                exec_cmd('cp -rv object_detection/* ./')
-        except Exception as e:
-            print('\n\nError preparing environment : ', e)
-            return False
-        return True
 
     def run_inference_for_single_image(self, image, graph):
         with graph.as_default():
@@ -168,11 +207,16 @@ class ssd:
                 return output_dict
 
     def get_detection_graph(self, frozen_graph):
-        detection_graph = tf.Graph()
-        with detection_graph.as_default():
+        print('Copying detection graph')
+        try:
+          detection_graph = tf.Graph()
+          with detection_graph.as_default():
             od_graph_def = tf.GraphDef()
             with tf.gfile.GFile(frozen_graph, 'rb') as fid:
                 serialized_graph = fid.read()
                 od_graph_def.ParseFromString(serialized_graph)
                 tf.import_graph_def(od_graph_def, name='')
-        return detection_graph
+          return detection_graph
+        except Exception as e:
+          print('Error while copying detection graph',e)
+        return None
