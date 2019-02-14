@@ -69,9 +69,8 @@ class ssd:
         exec_cmd('mv -v '+env_dir+'/md/research/setup.py '+env_dir+'/')
         exec_cmd('ln -s '+env_dir+'/object_detection/data data')
         exec_cmd('rm -rf '+env_dir+'/md')
-        print('\nTook ',time.time()-t1,'seconds to prepare environment')
-        #exec_cmd('ls '+env_dir+'/')
-        #exec_cmd('python '+env_dir +'/object_detection/builders/model_builder_test.py')
+        tt = time.time()-t1
+        print('\nTook ',tt,'seconds ('+str(tt/60)+' minutes) to prepare environment')
     
     def download_and_extract_graph(self):
       download_file(self.base_url + self.model_file,self.model_file_path)
@@ -87,10 +86,17 @@ class ssd:
             self.prepared = self.import_utils()
         else:
             print('No need to prepare environment')
-        self.lalbels_file = os.path.join('data', 'mscoco_label_map.pbtxt')
         
         if not os.path.isfile(self.frozen_graph):
           self.download_and_extract_graph()
+        
+        tt = time.time() - ts
+        print('\nTotal time took for preparing and or importing dependencies from'+self.env_dir+' ',tt,'seconds ('+str(tt/60)+' minutes)')
+
+    def load(self):
+        #load the model aka graph and other required data
+        ts = time.time()
+        self.lalbels_file = os.path.join('data', 'mscoco_label_map.pbtxt')        
         self.detection_graph = self.get_detection_graph(self.frozen_graph)
         if self.detection_graph is None:
           self.download_and_extract_graph()
@@ -98,7 +104,7 @@ class ssd:
         self.category_index = label_map_util.create_category_index_from_labelmap(
             self.lalbels_file, use_display_name=True)
         tt = time.time() - ts
-        print('\nTotal time took for preparing '+self.env_dir+' and importing dependencies from it:',tt,'seconds ('+str(tt/60)+' minutes)')
+        print('\nTime loading the model:',tt,'seconds ('+str(tt/60)+' minutes)')
 
     def import_utils(self):
         try:

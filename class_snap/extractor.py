@@ -1,54 +1,101 @@
 # extractor.py
 import cv2
-import time
+import json
+import os,sys,time
+from fileutils import download_file, exec_cmd,save_as_annotations
+from detector import detector
 
-def extract_frames(detector, input_file, class_labels, interval=None, dest_dir='.'):# interval if specified should be in terms of seconds
-    print('Detection Algorithm:%s\nModel loaded: %s\nInput File: %s\nIntervals at which to detect: %r seconds' % (
-        detector.name, detector.model_name, input_file, interval))
-    interval = interval * 1000  # convert to milliseconds
-    target_interval = interval
-    cap = cv2.VideoCapture(input_file)
-    output = {}  # format: File name : [list of matched labels]
-    if (cap.isOpened() == False):
-        print("Error opening video file", input_file)
-    i, count = 0, 0
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    input_file_name = '.'.join(input_file.split('.')[:-1])
-    total_duration = 0
+class extractor:
+    def __init__(self,detector_model_name='ssd',load=True):
+        self.detector_model_name = detector_model_name
+        self.prepare()
+        self.load()
+    
+    def prepare(self,detector_model_name='detector_model_name'):
+        detector_model_name = detector_model_name if detector_model_name else self.detector_model_name
+        detector_model_name = detector_model_name if detector_model_name else 'ssd'
+        self.detector_model_name = detector_model_name
+        
+        self.detector_model = detector(detector_model_name).get_model()
+        self.detector_model.prepare()
+    
+    def load(self):
+        self.detector_model.load()
 
-    if dest_dir[-1] != '/':
-        dest_dir = dest_dir + '/'
+    def process(self,input_file,class_labels_to_filter_by,interval=1,dest_dir='output',zip_name='detections.zip'):
+        #process
+        self.class_labels_to_filter_by = class_labels_to_filter_by
+        self.interval = interval
+        self.dest_dir = dest_dir
 
-    while(cap.isOpened()):
-        opfname = None
-        if interval:
-            cap.set(cv2.CAP_PROP_POS_MSEC, target_interval)
-            opfname = input_file_name+'-'+str(int(target_interval/1000))+'s.jpg'
-            target_interval += interval
-        ret, frame = cap.read()
-        if ret == True:
+        #detection / extraction
+        exec_cmd('mkdir '+dest_dir)
+        output = self.extract_frames(self.detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=dest_dir)
+
+        #annotation
+        json_files,failures = save_as_annotations(output,dest_dir)
+        if failures:
+            print('Failed to write: ',','.join(failures))
+
+        #moving and re organisation as data and meta
+        opdir = dest_dir+'/detections'
+        data_dir = opdir+'/data'
+        meta_dir = opdir+'/meta'
+        exec_cmd('rm -rf '+opdir)
+        exec_cmd('mkdir -p '+data_dir)
+        exec_cmd('mkdir -p '+meta_dir)
+        exec_cmd('cp '+' '.join([dest_dir+'/'+f for f in list(output.keys())])+' '+data_dir)
+        exec_cmd('cp '+' '.join(json_files)+' '+meta_dir)
+
+        #create zip
+        exec_cmd('zip '+zip_name+' -r '+opdir)
+    
+    def extract_frames(self,detector, input_file, class_labels, interval=None, dest_dir='.'):# interval if specified should be in terms of seconds
+        print('Detection Algorithm:%s\nModel loaded: %s\nInput File: %s\nIntervals at which to detect: %r seconds' % (detector.name, detector.model_name, input_file, interval))
+        interval = interval * 1000  # convert to milliseconds
+        target_interval = interval
+        cap = cv2.VideoCapture(input_file)
+        output = {}  # format: File name : [list of matched labels]
+        if (cap.isOpened() == False):
+            print("Error opening video file", input_file)
+        i = 0
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        input_file_name = '.'.join(input_file.split('.')[:-1])
+        total_duration = 0
+
+        if dest_dir[-1] != '/':
+            dest_dir = dest_dir + '/'
+
+        while(cap.isOpened()):
+            opfname = None
+            if interval:
+                cap.set(cv2.CAP_PROP_POS_MSEC, target_interval)
+                opfname = input_file_name+'-'+str(int(target_interval/1000))+'s.jpg'
+                target_interval += interval
+            ret, frame = cap.read()
+            
+            if not ret:
+                break
+            
             i += 1
             print('Frame: ', i, end=' ')
             #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            opfname = opfname if opfname else input_file_name + \
-                '-'+str(int(i/fps))+':'+str(i % fps)+'.jpg'
 
+            opfname = opfname if opfname else input_file_name + '-'+str(int(i/fps))+':'+str(i % fps)+'.jpg'
+            
             t1 = time.time()
-            result = detector.detect(
-                frame, dest_dir+opfname, class_labels)
+            result = detector.detect(frame, dest_dir+opfname, class_labels)
             t2 = time.time()
             duration = t2-t1
+
             total_duration += duration
             if result:
                 result.update({'time': duration})
                 output.update({opfname: result})
-        else:
-          break
-
-    print('Frames processed :', i)
-    print('Overall Processing speed per image', (total_duration)/i)
-    print('Total duration:',total_duration)
-    
-    cap.release()
-    cv2.destroyAllWindows()
-    return output
+            
+        print('Frames processed :', i)
+        print('Overall Processing speed per image', (total_duration)/i)
+        print('Total duration:',total_duration)
+        cap.release()
+        cv2.destroyAllWindows()
+        return output

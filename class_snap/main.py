@@ -1,95 +1,73 @@
 #!/usr/bin/python3
-from extractor import extract_frames
+from extractor import extractor
 import os
 import sys
 import argparse
-import json
-from fileutils import download_file, exec_cmd,save_as_annotations
-from detector import detector
-sys.path.append('.')
 # from compare import compare_models
 
+allowed_file_types = {'mp4': True, 'avi': True}
+def get_input_data(input_video, class_labels_file,input_videos_dir=None, allowed_file_types=None):
+    allowed_file_types = allowed_file_types if allowed_file_types else {'mp4': True, 'avi': True}
+    input_video_files = []
+    class_labels_to_filter = []
+    try:
+        if len(str(input_video)):
+            input_video_files.append(input_video)
+        
+        with open(class_labels_file, "r") as labels_file:
+            labels_str = labels_file.read()
+            class_labels_to_filter = labels_str.replace('\n', ',')
+            class_labels_to_filter = list(filter(None, class_labels_to_filter.split(',')))
+            if input_videos_dir:
+                input_video_files = input_video_files + list(filter(lambda f: allowed_file_types.get(f), os.listdir(input_videos_dir)))
+    except Exception as e:
+        print('error opening '+class_labels_file,'\n',e)
+    return input_video_files, class_labels_to_filter
 
-# def get_input_data(dir_name, class_lalbels_file, allowed_file_types={'mp4': True, 'avi': True}):
-#     with open(class_lalbels_file, "r") as labels_file:
-#         labels_str = labels_file.read()
-#         class_labels_to_filter = labels_str.replace('\n', ',')
-#         class_labels_to_filter = list(
-#             filter(None, class_labels_to_filter.split(',')))
-#         input_video_files = list(
-#             filter(lambda f: allowed_file_types.get(f), os.listdir(dir_name)))
-#         return input_video_files, class_labels_to_filter
-#     print('error opening '+class_lalbels_file)
-
-
-# def parse_args():
-#     parser = argparse.ArgumentParser(
-#         description='Tool to extract frames of a video containing specified object(s)')
-#     parser.add_argument('--videos_dir', dest='videos_dir',
-#                         help='Directory/Folder Containing input video file(s)', default='videos', type=str)
-#     parser.add_argument('--class_labels', dest='class_labels_file',
-#                         help='Object class labels to filter frames', default='class_labels.txt', type=str)
-#     parser.add_argument('--output_dir', dest='output_dir',
-#                         help='Destination Directory/Folder for output', default='output', type=str)
-#     return parser.parse_args()
-
-def process(class_labels_to_filter_by,input_file,interval,detector_model_name='ssd',dest_dir='output',zip_name='detections.zip'):
-    #preparation
-    #class_labels_to_filter_by = ['person']
-    #input_file=download_file('https://github.com/manuhg/masknet/raw/master/input_video.mp4',nc=True)
-    detector_model = detector(detector_model_name).get_model()
-    detector_model.prepare()
-
-    #detection / extraction
-    dest_dir = 'output'
-    exec_cmd('mkdir '+dest_dir)
-    output = extract_frames(detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=dest_dir)
-    
-    #annotation
-    json_files,failures = save_as_annotations(output,dest_dir)
-    if failures:
-        print('Failed to write: ',','.join(failures))
-    
-    #moving and re organisation as data and meta
-    opdir = dest_dir+'/detections'
-    data_dir = opdir+'/data'
-    meta_dir = opdir+'/meta'
-    exec_cmd('rm -rf '+opdir)
-    exec_cmd('mkdir -p '+data_dir)
-    exec_cmd('mkdir -p '+meta_dir)
-    exec_cmd('cp '+' '.join([dest_dir+'/'+f for f in list(output.keys())])+' '+data_dir)
-    exec_cmd('cp '+' '.join(json_files)+' '+meta_dir)
-
-    #create zip
-    exec_cmd('zip '+zip_name+' -r '+opdir)
+def parse_args():
+    global parser
+    parser = argparse.ArgumentParser(
+        description='Tool to extract frames of a video containing specified object(s)')
+    parser.add_argument('-i','--input_video', dest='input_video',
+                        help='input video file(s)', default='input_video.mp4', type=str)
+    parser.add_argument('-t','--interval', dest='interval',
+                        help='recuring interval (in seconds) at which to take a frame and process', default=1, type=int)                        
+    parser.add_argument('-id','--input_videos_dir', dest='input_videos_dir',
+                        help='Directory Containing input video file(s)', default='videos', type=str)
+    parser.add_argument('-c','--class_labels', dest='class_labels_file',
+                        help='Object class labels to filter frames', default='class_labels.txt', type=str,required=True)
+    parser.add_argument('-od','--output_dir', dest='output_dir',
+                        help='Destination Directory for output', default='output', type=str)
+    parser.add_argument('-o','--output_file', dest='zip_name',
+                        help='Output zip name', default='detections.zip', type=str)
+    return parser.parse_args()
 
 def main():
-    class_labels_to_filter_by = ['person']
-    input_file=download_file('https://github.com/manuhg/masknet/raw/master/input_video.mp4',nc=True)
-    interval = 100
-    process(class_labels_to_filter_by,input_file,interval)
-    # if len(sys.argv) >= 3:
-    #   pass
-    # TODO ADD functionality to use zip files as i/p and o/p instead of dir later on
-    # args = parse_args()
-    # videos_dir=args.videos_dir
-    # class_labels_file=args.class_labels_file
-    # output_dir=args.output_dir
-    #####################
-    # dir_name = sys.argv[1]
-    # class_labels_file = sys.argv[2]
-    # if len(sys.argv)>3:
-    #   dest_dir = sys.argv[3]
+    #class_labels_to_filter_by = []
+    #input_file = download_file('https://github.com/manuhg/masknet/raw/master/input_video.mp4',nc=True)
+    #interval = 1    
+    if len(sys.argv) >= 3:
+        args = parse_args()
+        input_video,input_videos_dir = args.input_video, args.input_videos_dir
+        output_dir, class_labels_file = args.output_dir, args.class_labels_file
+        interval, zip_name = args.interval, args.zip_name
 
-    # input_video_files,class_labels_to_filter = get_input_data(dir_name,class_labels_file)
-    # for input_video_file in input_video_files:
-    #   prediction_stats = extract_frames(input_video_file,class_labels,dest_dir,show_popup=True)
-    #   with open(input_video_file+'-prediction_stats.txt',"w+") as sf:
-    #     sf.write(json.dump(prediction_stats))
-    # compare_models() TODO
-   # else:
-    #    print('Format:\npython main.py <directory/zip file containing input videos> <text file containing class labels to filter> <destination (optional) > ')
-
+        input_video_files, class_labels_to_filter = get_input_data(input_video, class_labels_file,input_videos_dir, allowed_file_types)
+        
+        if (not input_video_files) or (not class_labels_to_filter) or (not output_dir) or (not interval):
+            print('\nError: Arguments empty/invalid')
+            print('input_video_files:',input_video_files)
+            print('class_labels_to_filter:',class_labels_to_filter)
+            print('output_dir:',output_dir)
+            print('interval:',interval)
+            print('Please check the above')
+            exit()
+        
+        extractor_ = extractor('ssd',load=True)
+        for input_video_file in input_video_files:
+            extractor_.process(input_video_file,class_labels_to_filter,interval,output_dir,zip_name)
+    else:
+       parser.print_help()
 
 if __name__ == "__main__":
     main()
