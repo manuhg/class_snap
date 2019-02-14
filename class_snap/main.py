@@ -58,12 +58,12 @@ def main():
             print('interval:',interval)
             print('Please check the above')
             exit()
-        
         extractor_ = extractor('ssd',load=True)
         for input_video_file in input_video_files:
+            print(input_video_file,class_labels_to_filter,interval,zip_name)
             extractor_.process(input_video_file,class_labels_to_filter,interval,zip_name=zip_name)
     else:
-        print('Example: python main.py -i input_video.mp4 -t 20 -c class_labels.txt ')
+        print('\nExample: python main.py -i input_video.mp4 -t 20 -c class_labels.txt\n')
         parser.print_help()
 
 if __name__ == "__main__":
