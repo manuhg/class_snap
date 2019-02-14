@@ -1,6 +1,6 @@
 # detector.py
 from models.ssd import ssd
-from models.yolo import yolo
+#from models.yolo import yolo
 
 
 class detector:
@@ -11,7 +11,7 @@ class detector:
 
     def __init__(self,model_name):
         self.models['ssd']['model'] = ssd
-        self.models['yolo']['model'] = yolo
+        #self.models['yolo']['model'] = yolo
         self.model_name = model_name if model_name else 'ssd'
         self.model = self.models[self.model_name]
 
