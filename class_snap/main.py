@@ -10,42 +10,28 @@ sys.path.append('.')
 # from compare import compare_models
 
 
-def get_input_data(dir_name, class_lalbels_file, allowed_file_types={'mp4': True, 'avi': True}):
-    with open(class_lalbels_file, "r") as labels_file:
-        labels_str = labels_file.read()
-        class_labels_to_filter = labels_str.replace('\n', ',')
-        class_labels_to_filter = list(
-            filter(None, class_labels_to_filter.split(',')))
-        input_video_files = list(
-            filter(lambda f: allowed_file_types.get(f), os.listdir(dir_name)))
-        return input_video_files, class_labels_to_filter
-    print('error opening '+class_lalbels_file)
+# def get_input_data(dir_name, class_lalbels_file, allowed_file_types={'mp4': True, 'avi': True}):
+#     with open(class_lalbels_file, "r") as labels_file:
+#         labels_str = labels_file.read()
+#         class_labels_to_filter = labels_str.replace('\n', ',')
+#         class_labels_to_filter = list(
+#             filter(None, class_labels_to_filter.split(',')))
+#         input_video_files = list(
+#             filter(lambda f: allowed_file_types.get(f), os.listdir(dir_name)))
+#         return input_video_files, class_labels_to_filter
+#     print('error opening '+class_lalbels_file)
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(
-        description='Tool to extract frames of a video containing specified object(s)')
-    parser.add_argument('--videos_dir', dest='videos_dir',
-                        help='Directory/Folder Containing input video file(s)', default='videos', type=str)
-    parser.add_argument('--class_labels', dest='class_labels_file',
-                        help='Object class labels to filter frames', default='class_labels.txt', type=str)
-    parser.add_argument('--output_dir', dest='output_dir',
-                        help='Destination Directory/Folder for output', default='output', type=str)
-    return parser.parse_args()
-
-
-# {"annotation": {"data_filename": "1.jpg", "data_type": "image", "data_annotation": {"bounding_polygon": [], "bounding_box": [{"classification_label": "label1", "point_2D": ["98,192", "185,278"]}, {
-#     "classification_label": "label2", "point_2D": ["282,153", "364,293"]}, {"classification_label": "label2", "point_2D": ["421,152", "508,250"]}, {"classification_label": "label1", "point_2D": ["144,70", "213,147"]}]}}}
-
-
-def convert_to_annotations(fname, output):  # call once per file
-    annotations = {'annotation': {'data_filename': fname, 'data_type': 'image', 'data_annotation': {'bounding_polygon': [], 'bounding_box': ''}}
-    regions = None
-    for item in output.items():
-        regions = ''
-    annotations['annotation']['data_annotation']['bounding_box'] = regions
-
-
+# def parse_args():
+#     parser = argparse.ArgumentParser(
+#         description='Tool to extract frames of a video containing specified object(s)')
+#     parser.add_argument('--videos_dir', dest='videos_dir',
+#                         help='Directory/Folder Containing input video file(s)', default='videos', type=str)
+#     parser.add_argument('--class_labels', dest='class_labels_file',
+#                         help='Object class labels to filter frames', default='class_labels.txt', type=str)
+#     parser.add_argument('--output_dir', dest='output_dir',
+#                         help='Destination Directory/Folder for output', default='output', type=str)
+#     return parser.parse_args()
 
 def process(class_labels_to_filter_by,input_file,interval,detector_model_name='ssd',dest_dir='output',zip_name='detections.zip'):
     #preparation
