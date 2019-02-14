@@ -4,7 +4,7 @@ import os
 import sys
 import argparse
 import json
-from fileutils import download_file, exec_cmd
+from fileutils import download_file, exec_cmd,save_as_annotations
 from detector import detector
 sys.path.append('.')
 # from compare import compare_models
