@@ -39,7 +39,7 @@ def main():
     #interval = 1
     parser = build_args_parser()  
     if len(sys.argv) >= 3:
-        args = parser.parse_args()()
+        args = parser.parse_args()
         input_video = args.input_video
         class_labels_file = args.class_labels_file
         interval = args.interval
