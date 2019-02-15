@@ -53,9 +53,11 @@ class yolo:
     def load_shared_lib(self,path=None):
         path  = self.shared_lib_path if path is None else path
         if not os.path.isfile(path):
+            print(path,' not found')
             return False
         try:
             self.lib = CDLL(self.env_dir+"libdarknet.so", RTLD_GLOBAL)
+            print('Imported libdarknet',self.lib)
             return True
         except Exception as e:
             print('Error loading shared library ',e)
@@ -152,20 +154,32 @@ class yolo:
         except Exception as e:
             print('Error loading network',e)
         return False
-    
-    def detect(self,image,opfile):
+
+    def fusecoordinates(self,coordinates_tuple):
+        pt1,pt2 = coordinates_tuple
+        return list(pt1)+list(pt2)
+
+    def detect(self,image,opfile,class_labels_to_filter, visualize=False):
         result  = self.detect_(self.net, self.meta, image, opfile)
-        output_dict = {'bounding_boxes':bboxes_converted,'labels_detected':labels_detected}
+        labels_detected = [ r[0] for r in result ]
+        labels_matched = list(set(labels_detected) & set(class_labels_to_filter))
+        bbox_converted =  [ self.fusecoordinates(self.convert_to_coordinates(r)) for r in result  ]
+        output_dict = {'bounding_boxes': bbox_converted,'labels_detected':labels_detected}
         return {'labels_matched': labels_matched, 'output': output_dict}
 
     def __init__(self,model_name='yolov2',prepared = False,env_parent='models/env/'):
         self.name='YOLO'
         self.env_dir = 'env_'+self.name+'/'
+        self.pretrained_models_dir = 'pretrained/'
+
+        if env_parent:
+            self.env_dir = env_parent + self.env_dir
+            self.pretrained_models_dir = env_parent + self.pretrained_models_dir
+
         self.shared_lib_path = self.env_dir+"libdarknet.so"
         self.lib = None
         self.prepared = prepared
         self.model_name = model_name
-        self.pretrained_models_dir = 'pretrained/'
 
 
         self.weights_base_url = 'https://pjreddie.com/media/files/'
@@ -177,9 +191,7 @@ class yolo:
         self.model_name = model_name
         self.model = self.models[self.model_name]
 
-        if env_parent:
-            self.env_dir = env_parent + self.env_dir
-            self.pretrained_models_dir = env_parent + self.pretrained_models_dir
+        
         
         exec_cmd('mkdir -p '+self.env_dir)
         exec_cmd('mkdir -p '+self.pretrained_models_dir)
@@ -216,9 +228,9 @@ class yolo:
         load_alphabet.argtypes = []
         load_alphabet.restype = POINTER(POINTER(IMAGE))
         
-        self.draw_detections = lib.draw_detections
-        self.draw_detections.argtypes = [IMAGE, POINTER(DETECTION), c_int, c_float, POINTER(c_char_p), POINTER(POINTER(IMAGE)), c_int]
-        self.draw_detections.restype = IMAGE
+        # self.draw_detections = lib.draw_detections
+        # self.draw_detections.argtypes = [IMAGE, POINTER(DETECTION), c_int, c_float, POINTER(c_char_p), POINTER(POINTER(IMAGE)), c_int]
+        # self.draw_detections.restype = IMAGE
         
         self.save_image = lib.save_image
         self.save_image.argtypes = [IMAGE, c_char_p]
@@ -267,9 +279,9 @@ class yolo:
         self.free_image = lib.free_image
         self.free_image.argtypes = [IMAGE]
 
-        self.letterbox_image = lib.letterbox_image
-        self.letterbox_image.argtypes = [IMAGE, c_int, c_int]
-        self.letterbox_image.restype = IMAGE
+        # self.letterbox_image = lib.letterbox_image
+        # self.letterbox_image.argtypes = [IMAGE, c_int, c_int]
+        # self.letterbox_image.restype = IMAGE
 
         self.load_meta = lib.get_metadata
         self.lib.get_metadata.argtypes = [c_char_p]
