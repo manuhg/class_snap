@@ -48,7 +48,7 @@ class yolo:
         #if target dir is same as current dir
         if self.td_is_cd:
             exec_cmd('git clone https://github.com/manuhg/darknet '+self.name)
-            exec_cmd('mv '+self.name+'/* ./')
+            exec_cmd('mv -v '+self.name+'/* ./')
             exec_cmd('make -j8')
         else:
             exec_cmd('git clone https://github.com/manuhg/darknet '+self.src_dir)
@@ -334,10 +334,6 @@ class yolo:
 
   
 # if __name__=="__main__":
-#   #y = yolo()
-#   #y.prepare()
-#   #y.load()
-#   y = yolo(model_name='yolov3-tiny',env_parent=None,env_dir='./',ptmodels='./')
-#   y.prepare()
-#   y.load()
-#   y.detect(cv2.imread('data/dog.jpg'),'predictionsee.jpg',['dog'])
+#     y = yolo(model_name='yolov3-tiny')#,env_parent=None,env_dir='./',ptmodels='./')
+#     y.prepare()
+#     y.load()
