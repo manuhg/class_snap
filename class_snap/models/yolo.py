@@ -45,8 +45,11 @@ class METADATA(Structure):
 class yolo:
     def prepare(self):
         print('Preparing the environment')
-        exec_cmd('git clone https://github.com/manuhg/darknet '+self.env_dir+self.name)
-        exec_cmd('cd '+self.env_dir+self.name+' && make -j8 && cp libdarknet* ../')
+        exec_cmd('git clone https://github.com/manuhg/darknet '+self.src_dir)
+        exec_cmd('cd '+self.src_dir+' && make -j8')
+        exec_cmd('cp -v '+self.src_dir+'/libdarknet* '+self.env_dir)
+        exec_cmd('ln -s '+self.data_dir+ ' data')
+        exec_cmd('ln -s '+self.cfg_dir+ ' cfg')
         if not os.path.isfile(self.model['weights']):
             exec_cmd('wget -nc https://pjreddie.com/media/files/'+self.model_name+'.weights -o '+self.pretrained_models_dir+self.model_name+'.weights')
     
@@ -109,20 +112,12 @@ class yolo:
         return img
     
     def detect_(self,net, meta, image, output_file='predictions.jpg', thresh=.5, hier_thresh=.5, nms=.45,visualize=False):
-        h = self.lib.network_height(net)
-        w = self.lib.network_width(net)
-
-        if type(image)==str:
-            image=cv2.imread(image)
-            #im = load_image(image, 0, 0)
-        #else:
+        
         im = self.preprocess_cv_img(image)
-        #im_sized = letterbox_image(im, h, w)
-        im_sized=im
 
         num = c_int(0)
         pnum = pointer(num)
-        self.predict_image(net, im_sized)
+        self.predict_image(net, im)
         dets = self.get_network_boxes(net, im.w, im.h, thresh, hier_thresh, None, 0, pnum)
         num = pnum[0]
 
@@ -139,17 +134,26 @@ class yolo:
         if visualize:
             for r in res:
                 image=self.box_and_label(r,image,self.colors)
+
         cv2.imwrite(output_file,image)
-        self.free_image(im)
         self.free_detections(dets, num)
         return res
     
     def load(self):
         try:
+            print('Files:')
+            print(self.model['cfg'],'exists? ',os.path.isfile(self.model['cfg']))
+            print(self.model['weights'],'exists?', os.path.isfile(self.model['weights']))
+            print(self.labels_data,'exists?',os.path.isfile(self.labels_data))
+            
+            if not (os.path.isfile(self.model['cfg']) and os.path.isfile(self.model['weights']) and os.path.isfile(self.labels_data)):
+              print('Required file not found. Quitting.')
+              return
             print('Loading net..',self.model['cfg'], self.model['weights'])
             self.net = self.load_net(self.model['cfg'], self.model['weights'], 0)
+            
             print('Loading metadata')
-            self.meta = self.load_meta(self.env_dir+"cfg/coco.data")
+            self.meta = self.load_meta(self.labels_data)
             return True
         except Exception as e:
             print('Error loading network',e)
@@ -161,6 +165,7 @@ class yolo:
 
     def detect(self,image,opfile,class_labels_to_filter, visualize=False):
         result  = self.detect_(self.net, self.meta, image, opfile)
+        print(result)
         labels_detected = [ r[0] for r in result ]
         labels_matched = list(set(labels_detected) & set(class_labels_to_filter))
         bbox_converted =  [ self.fusecoordinates(self.convert_to_coordinates(r)) for r in result  ]
@@ -170,6 +175,7 @@ class yolo:
     def __init__(self,model_name='yolov2',prepared = False,env_parent='models/env/'):
         self.name='YOLO'
         self.env_dir = 'env_'+self.name+'/'
+        
         self.pretrained_models_dir = 'pretrained/'
 
         if env_parent:
@@ -180,18 +186,21 @@ class yolo:
         self.lib = None
         self.prepared = prepared
         self.model_name = model_name
-
+        self.src_dir = self.env_dir+self.name
+        
+        self.cfg_dir = self.src_dir+"/cfg/"
+        self.labels_data = self.cfg_dir + "coco.data"
+        self.data_dir = self.src_dir+"/data"
 
         self.weights_base_url = 'https://pjreddie.com/media/files/'
         self.cfg_base_url = 'https://raw.githubusercontent.com/pjreddie/darknet/master/'
         self.models_lst = ['yolov2', 'yolov2-tiny', 'yolov3', 'yolov3-tiny']
         self.models = {}
         for model_name_ in self.models_lst:
-            self.models.update({model_name_: {'name': model_name_, 'cfg': self.env_dir+'cfg/' +model_name_+'.cfg', 'weights': self.env_dir+model_name_ + '.weights'}})
+            self.models.update({model_name_: {'name': model_name_, 'cfg': self.cfg_dir + model_name_+'.cfg', 'weights': self.pretrained_models_dir+model_name_ + '.weights'}})
         self.model_name = model_name
         self.model = self.models[self.model_name]
-
-        
+            
         
         exec_cmd('mkdir -p '+self.env_dir)
         exec_cmd('mkdir -p '+self.pretrained_models_dir)
@@ -215,6 +224,9 @@ class yolo:
             print('Need to prepare environment')
             self.prepare()
             prepared = self.load_shared_lib()
+            if not prepared:
+              print('ERROR LOADING libdarknet.so')
+              return
         
         lib = self.lib
         
@@ -298,3 +310,12 @@ class yolo:
         self.predict_image.argtypes = [c_void_p, IMAGE]
         self.predict_image.restype = POINTER(c_float)
     
+
+def exec_cmd(cmdstr,echo=True):
+  print(cmdstr)
+  print(os.popen(cmdstr).read() if echo else '')
+  
+if __name__=="__main__":
+  y = yolo()
+  y.load()
+  y.detect(cv2.imread('data/dog.jpg'),'predictionsee.jpg',['dog'])
