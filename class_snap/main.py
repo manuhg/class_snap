@@ -33,6 +33,7 @@ def build_args_parser():
     #parser.add_argument('-id','--input_videos_dir', dest='input_videos_dir',help='Directory Containing input video file(s)', default='videos', type=str)
     #parser.add_argument('-od','--output_dir', dest='output_dir',help='Destination Directory for output', default='output', type=str)
     parser.add_argument('-o','--output_file', dest='zip_name',help='Output zip name', default='detections.zip', type=str)
+    parser.add_argument('-m','--model', dest='model_name',help='model name', default='ssd', type=str)
     return parser
 
 def main():
@@ -44,7 +45,7 @@ def main():
         input_video = args.input_video
         class_labels_file = args.class_labels_file
         interval = args.interval
-        
+        model_name = args.model_name
         zip_name = args.zip_name
         #input_videos_dir,output_dir,  = args.input_videos_dir, args.output_dir,
         
@@ -59,7 +60,7 @@ def main():
             print('interval:',interval)
             print('Please check the above')
             exit()
-        extractor_ = extractor('ssd',load=True)
+        extractor_ = extractor(model_name,load=True)
         for input_video_file in input_video_files:
             print(input_video_file,class_labels_to_filter,interval,zip_name)
             extractor_.process(input_video_file,class_labels_to_filter,interval,zip_name=zip_name)
