@@ -98,7 +98,7 @@ class ssd:
     def load(self):
         #load the model aka graph and other required data
         ts = time.time()
-        self.lalbels_file = os.path.join('data', 'mscoco_label_map.pbtxt')        
+        self.lalbels_file = os.path.join(self.env_dir+'/object_detection/data', 'mscoco_label_map.pbtxt')        
         self.detection_graph = self.get_detection_graph(self.frozen_graph)
         if self.detection_graph is None:
           self.download_and_extract_graph()

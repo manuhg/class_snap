@@ -239,8 +239,8 @@ class yolo:
               return
         
         download_wights = True
-        if os.path.isfile(self.model['weights']) and (os.stat('yolov3-tiny.weights').st_size/1048576)>1:
-          print('weights file exists. size: ',(os.stat('yolov3-tiny.weights').st_size/1048576),'Mb')
+        if os.path.isfile(self.model['weights']) and (os.stat(self.model['weights']).st_size/1048576)>1:
+          print('weights file exists. size: ',(os.stat(self.model['weights']).st_size/1048576),'Mb')
           download_wights = False
                 
         if download_wights:
