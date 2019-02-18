@@ -69,7 +69,7 @@ class ssd:
         exec_cmd('mv -v '+env_dir+'/md/research/* '+env_dir+'/')
         #exec_cmd('mv '+env_dir+'/md/research/object_detection ./')
         exec_cmd('mv -v '+env_dir+'/md/research/setup.py '+env_dir+'/')
-        exec_cmd('ln -s '+env_dir+'/object_detection/data data')
+        #exec_cmd('ln -s '+env_dir+'/object_detection/data data')
         exec_cmd('rm -rf '+env_dir+'/md')
         tt = time.time()-t1
         print('\nTook ',tt,'seconds ('+str(tt/60)+' minutes) to prepare environment')
