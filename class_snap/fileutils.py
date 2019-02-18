@@ -19,9 +19,12 @@ def download_file(url,filename=None,nc=False):#nc no clobber i.e dont download i
   exec_cmd('wget -nc '+url+fn)
   return filename if filename else url.split('/')[-1]
 
-# def download_file(url,filename):
-#   opener = urllib.request.URLopener()  
-#   opener.retrieve(url, filename)
+def download_file_urllib(url,filename):
+  print('Downloading from',url,' to ',filename)
+  opener = urllib.request.URLopener()
+  opener.retrieve(url, filename)
+  print('Downloaded file size: ',os.stat(filename).st_size/1048576,'Mb')
+
 def create_zip(zip_name,file_names):
   print('Creating zip file ',zip_name)
   exec_cmd('zip -r '+zip_name+' '+' '.join(file_names))

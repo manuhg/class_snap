@@ -9,7 +9,7 @@ def import_file_utils():
   try:
     sys.path.append('..')
     global exec_cmd
-    from fileutils import exec_cmd
+    from fileutils import exec_cmd,download_file_urllib
   except Exception as e:
     print('Unable to import fileutils')
 
@@ -48,7 +48,7 @@ class yolo:
         #if target dir is same as current dir
         if self.td_is_cd:
             exec_cmd('git clone https://github.com/manuhg/darknet '+self.name)
-            exec_cmd('mv -v '+self.name+'/* ./')
+            exec_cmd('mv '+self.name+'/* ./')
             exec_cmd('make -j8')
         else:
             exec_cmd('git clone https://github.com/manuhg/darknet '+self.src_dir)
@@ -56,9 +56,6 @@ class yolo:
             exec_cmd('cp -v '+self.src_dir+'/libdarknet* '+self.env_dir)
             exec_cmd('ln -s '+self.data_dir+ ' data')
             exec_cmd('ln -s '+self.cfg_dir+ ' cfg')
-        
-        if not os.path.isfile(self.model['weights']):
-            exec_cmd('wget -nc https://pjreddie.com/media/files/'+self.model_name+'.weights -o '+self.pretrained_models_dir+self.model_name+'.weights')
     
     def load_shared_lib(self,path=None):
         path  = self.shared_lib_path if path is None else path
@@ -240,6 +237,17 @@ class yolo:
               print('ERROR LOADING libdarknet.so')
               return
         
+        download_wights = True
+        if os.path.isfile(self.model['weights']) and (os.stat('yolov3-tiny.weights').st_size/1048576)>1:
+          print('weights file exists. size: ',(os.stat('yolov3-tiny.weights').st_size/1048576),'Mb')
+          download_wights = False
+                
+        if download_wights:
+            target_file = self.model_name+'.weights'
+            if not self.td_is_cd:
+                target_file = self.pretrained_models_dir+self.model_name+'.weights'
+            download_file_urllib('https://pjreddie.com/media/files/'+self.model_name+'.weights',target_file)
+        
         lib = self.lib
         
         lib.network_width.argtypes = [c_void_p]
@@ -323,9 +331,7 @@ class yolo:
         self.predict_image.restype = POINTER(c_float)
     
 
-def exec_cmd(cmdstr,echo=True):
-  print(cmdstr)
-  print(os.popen(cmdstr).read() if echo else '')
+
   
 # if __name__=="__main__":
 #   #y = yolo()
