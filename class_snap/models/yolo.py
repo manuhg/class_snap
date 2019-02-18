@@ -43,13 +43,20 @@ class METADATA(Structure):
                 ("names", POINTER(c_char_p))]
 
 class yolo:
-    def prepare(self):
+    def prepare_env(self):
         print('Preparing the environment')
-        exec_cmd('git clone https://github.com/manuhg/darknet '+self.src_dir)
-        exec_cmd('cd '+self.src_dir+' && make -j8')
-        exec_cmd('cp -v '+self.src_dir+'/libdarknet* '+self.env_dir)
-        exec_cmd('ln -s '+self.data_dir+ ' data')
-        exec_cmd('ln -s '+self.cfg_dir+ ' cfg')
+        #if target dir is same as current dir
+        if self.td_is_cd:
+            exec_cmd('git clone https://github.com/manuhg/darknet '+self.name)
+            exec_cmd('mv -v '+self.name+'/* ./')
+            exec_cmd('make -j8')
+        else:
+            exec_cmd('git clone https://github.com/manuhg/darknet '+self.src_dir)
+            exec_cmd('cd '+self.src_dir+' && make -j8')
+            exec_cmd('cp -v '+self.src_dir+'/libdarknet* '+self.env_dir)
+            exec_cmd('ln -s '+self.data_dir+ ' data')
+            exec_cmd('ln -s '+self.cfg_dir+ ' cfg')
+        
         if not os.path.isfile(self.model['weights']):
             exec_cmd('wget -nc https://pjreddie.com/media/files/'+self.model_name+'.weights -o '+self.pretrained_models_dir+self.model_name+'.weights')
     
@@ -59,7 +66,7 @@ class yolo:
             print(path,' not found')
             return False
         try:
-            self.lib = CDLL(self.env_dir+"libdarknet.so", RTLD_GLOBAL)
+            self.lib = CDLL(path, RTLD_GLOBAL)
             print('Imported libdarknet',self.lib)
             return True
         except Exception as e:
@@ -172,11 +179,11 @@ class yolo:
         output_dict = {'bounding_boxes': bbox_converted,'labels_detected':labels_detected}
         return {'labels_matched': labels_matched, 'output': output_dict}
 
-    def __init__(self,model_name='yolov2',prepared = False,env_parent='models/env/'):
+    def __init__(self,model_name='yolov2',prepared = False,env_parent='models/env/',env_dir=None,ptmodels=None):
         self.name='YOLO'
-        self.env_dir = 'env_'+self.name+'/'
+        self.env_dir = 'env_'+self.name+'/' if not env_dir else env_dir
         
-        self.pretrained_models_dir = 'pretrained/'
+        self.pretrained_models_dir = 'pretrained/' if ptmodels is None else ptmodels
 
         if env_parent:
             self.env_dir = env_parent + self.env_dir
@@ -186,7 +193,7 @@ class yolo:
         self.lib = None
         self.prepared = prepared
         self.model_name = model_name
-        self.src_dir = self.env_dir+self.name
+        self.src_dir = self.env_dir+self.name if env_parent else self.env_dir
         
         self.cfg_dir = self.src_dir+"/cfg/"
         self.labels_data = self.cfg_dir + "coco.data"
@@ -201,9 +208,10 @@ class yolo:
         self.model_name = model_name
         self.model = self.models[self.model_name]
             
-        
-        exec_cmd('mkdir -p '+self.env_dir)
-        exec_cmd('mkdir -p '+self.pretrained_models_dir)
+        self.td_is_cd = ''.join(filter(None,self.src_dir.split('/'))) == '.'
+        if not self.td_is_cd:
+            exec_cmd('mkdir -p '+self.env_dir)
+            exec_cmd('mkdir -p '+self.pretrained_models_dir)
         
         self.colors = [(39, 129, 113), (164, 80, 133), (83, 122, 114), (99, 81, 172), (95, 56, 104), (37, 84, 86), (14, 89, 122),
         (80, 7, 65), (10, 102, 25),(90, 185, 109), (106, 110, 132), (169, 158, 85), (188, 185, 26), (103, 1, 17), (82, 144, 81), 
@@ -218,11 +226,15 @@ class yolo:
         (62, 39, 2), (49, 99, 180), (49, 119, 155), (153, 50, 183), (125, 38, 3), (129, 87, 143), (49, 87, 40), (128, 62, 120),
         (73, 85, 148), (28, 144, 118), (29, 9, 24), (175, 45, 108), (81, 175, 64), (178, 19, 157), (74, 188, 190), (18, 114, 2),
         (62, 128, 96), (21, 3, 150), (0, 6, 95), (2, 20, 184), (122, 37, 185)]
-        
+    
+    def print_config(self):
+        print('env_dir:',self.env_dir,'\nsrc_dir',self.src_dir,'\npretrained models dir',self.pretrained_models_dir,'\ncfg dir',self.cfg_dir,'\ndata dir',self.data_dir)
+
+    def prepare(self,prepared=None):        
         prepared = self.load_shared_lib()
         if not prepared:
             print('Need to prepare environment')
-            self.prepare()
+            self.prepare_env()
             prepared = self.load_shared_lib()
             if not prepared:
               print('ERROR LOADING libdarknet.so')
@@ -315,7 +327,11 @@ def exec_cmd(cmdstr,echo=True):
   print(cmdstr)
   print(os.popen(cmdstr).read() if echo else '')
   
-if __name__=="__main__":
-  y = yolo()
-  y.load()
-  y.detect(cv2.imread('data/dog.jpg'),'predictionsee.jpg',['dog'])
+# if __name__=="__main__":
+#   #y = yolo()
+#   #y.prepare()
+#   #y.load()
+#   y = yolo(model_name='yolov3-tiny',env_parent=None,env_dir='./',ptmodels='./')
+#   y.prepare()
+#   y.load()
+#   y.detect(cv2.imread('data/dog.jpg'),'predictionsee.jpg',['dog'])
