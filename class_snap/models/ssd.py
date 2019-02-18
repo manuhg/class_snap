@@ -1,3 +1,4 @@
+from __future__ import print_function
 from distutils.version import StrictVersion
 import os,sys,time
 import numpy as np

@@ -1,4 +1,4 @@
-# detector.py
+from __future__ import print_function
 from models.ssd import ssd
 from models.yolo import yolo
 
