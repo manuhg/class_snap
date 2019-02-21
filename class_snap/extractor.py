@@ -6,17 +6,18 @@ from fileutils import download_file, exec_cmd,save_as_annotations
 from detector import detector
 
 class extractor:
-    def __init__(self,detector_model_name='ssd',load=True):
-        self.detector_model_name = detector_model_name
+    def __init__(self,model_name='ssd',load=True):
+        self.model_name = model_name
+        print('Using model',model_name)
         self.prepare()
         self.load()
     
-    def prepare(self,detector_model_name='ssd'):
-        detector_model_name = detector_model_name if detector_model_name else self.detector_model_name
-        detector_model_name = detector_model_name if detector_model_name else 'ssd'
-        self.detector_model_name = detector_model_name
+    def prepare(self,model_name='ssd'):
+        model_name = model_name if model_name else self.model_name
+        model_name = model_name if model_name else 'ssd'
+        self.model_name = model_name
         
-        self.detector_model = detector(detector_model_name).get_model()
+        self.detector_model = detector(model_name).get_model()
         self.detector_model.prepare()
     
     def load(self):

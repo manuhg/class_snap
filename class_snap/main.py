@@ -42,7 +42,6 @@ def main():
     parser = build_args_parser()
     if len(sys.argv) >= 3:
         args = parser.parse_args()
-        print(args)
         input_video = args.input_video
         class_labels_file = args.class_labels_file
         interval = args.interval
@@ -61,7 +60,7 @@ def main():
             print('interval:',interval)
             print('Please check the above')
             exit()
-        extractor_ = extractor(model_name,load=True)
+        extractor_ = extractor(model_name=model_name,load=True)
         for input_video_file in input_video_files:
             print(input_video_file,class_labels_to_filter,interval,zip_name)
             extractor_.process(input_video_file,class_labels_to_filter,interval,zip_name=zip_name)
