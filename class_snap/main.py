@@ -5,7 +5,7 @@ import os
 import sys
 import argparse
 # from compare import compare_models
-
+from fileutils import *
 allowed_file_types = {'mp4': True, 'avi': True}
 def get_input_data(input_video, class_labels_file,input_videos_dir=None, allowed_file_types=None):
     allowed_file_types = allowed_file_types if allowed_file_types else {'mp4': True, 'avi': True}
