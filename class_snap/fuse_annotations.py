@@ -115,7 +115,7 @@ def main():
     parser = build_args_parser()
     if len(sys.argv) >= 1:
         args = parser.parse_args()
-        input_file = args.input_video
+        input_file = args.input_file
         output_dir = args.output_dir
         
         if (not input_file) or (not output_dir):
