@@ -7,6 +7,8 @@ from zipfile import ZipFile
 import json
 import cv2
 import random
+from fileutils import exec_cmd 
+
 
 class annotation_fuser:
     def __init__(self,input_file=None,output_dir=None):
@@ -57,11 +59,7 @@ class annotation_fuser:
         dest_dir = dest_dir+'/' if dest_dir[-1]!='/' else dest_dir
         img_parent_dir = parent_dir+'data/'
         filename = annotation_dict['annotation']['data_filename']
-        print(filename)
         opfname = dest_dir + filename
-        print(filename)
-        filename = parent_dir + filename
-        print(filename)
         try:
             if not os.path.isfile(img_parent_dir+filename):
               print(img_parent_dir+filename,'Not Found!')
@@ -85,12 +83,8 @@ class annotation_fuser:
         meta_path = exdir+'meta/'
         annotations_lst = []
         try:
-            try:
-              os.mkdir(exdir)
-              os.mkdir(output_dir)
-            except Exception as e:
-              print('Error creating directories.\n',e)
-            
+            exec_cmd('mkdir -p '+exdir)
+            exec_cmd('mkdir -p '+output_dir)
             with ZipFile(input_file,'r') as zip_file:
                 print('Extracting ',input_file)
                 zip_file.extractall(exdir)
@@ -106,11 +100,7 @@ class annotation_fuser:
             
             print('Extracted all annotations\n',annotations_lst)            
             list(map(lambda ann:self.fuse(ann,exdir,output_dir),annotations_lst))
-            
-#             try:
-#               print(os.popen('rm -rf ',exdir).read())
-#             except Exception as e:
-#               print('Error removing '+exdir+' \n',e)  
+            exec_cmd('rm -rf '+exdir)
         except Exception as e:
             print('Error while processing\n',e)
         
@@ -141,5 +131,5 @@ def main():
         print('\nExample: python2 fuse_annotations.py -i detections.zip -o fused_images \n')
         parser.print_help()
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
