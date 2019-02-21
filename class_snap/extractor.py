@@ -6,14 +6,14 @@ from fileutils import download_file, exec_cmd,save_as_annotations
 from detector import detector
 
 class extractor:
-    def __init__(self,model_name='ssd',load=True):
+    def __init__(self,model_name='yolo',load=True):
         self.model_name = model_name
         self.prepare()
         self.load()
     
     def prepare(self,model_name=None):
         model_name = model_name if model_name else self.model_name
-        model_name = model_name if model_name else 'ssd'
+        model_name = model_name if model_name else 'yolo'
         self.model_name = model_name
         
         self.detector_model = detector(model_name).get_model()
@@ -92,9 +92,11 @@ class extractor:
             duration = t2-t1
 
             total_duration += duration
-            if result:
+            if result and result['labels_matched']:
                 result.update({'time': duration})
                 output.update({opfname: result})
+            else:
+                print(' - No labels matched. Frame rejected')
             
         print('Frames processed :', i)
         print('Overall Processing speed per image', (total_duration)/i)
