@@ -4,6 +4,7 @@ import json
 import os,sys,time
 from fileutils import download_file, exec_cmd,save_as_annotations
 from detector import detector
+import shutil
 
 class extractor:
     def __init__(self,model_name='yolo',model_variant=None,load=True):
@@ -44,7 +45,7 @@ class extractor:
             print('Failed to write: ',','.join(failures))
 
         #moving and re organisation as data and meta
-        opdir = dest_dir+'/detections'
+        opdir = dest_dir+'/detections/'
         data_dir = opdir+'/data'
         meta_dir = opdir+'/meta'
         exec_cmd('rm -rf '+opdir)
@@ -53,7 +54,9 @@ class extractor:
         exec_cmd('cp '+' '.join([dest_dir+'/'+f for f in list(output.keys())])+' '+data_dir)
         exec_cmd('cp '+' '.join(json_files)+' '+meta_dir)
         #create zip
-        exec_cmd('zip '+zip_name+' -r '+opdir)
+        #exec_cmd('zip '+zip_name+' -r '+opdir)
+        shutil.make_archive(zip_name, 'zip', opdir)
+
 
         if del_after:
             exec_cmd('rm -rf '+dest_dir)
