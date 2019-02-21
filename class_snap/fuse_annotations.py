@@ -1,17 +1,18 @@
 #!/usr/bin/python2
 from __future__ import print_function
-from extractor import extractor
 import os
 import sys
 import argparse
 from zipfile import ZipFile
 import json
+import cv2
+import random
+
 class annotation_fuser:
     def __init__(self,input_file=None,output_dir=None):
         self.input_file = input_file
         self.output_dir = output_dir
-        self.colour_palatte = 
-        [(39, 129, 113), (164, 80, 133), (83, 122, 114), (99, 81, 172), (95, 56, 104), (37, 84, 86), (14, 89, 122),
+        self.colour_palatte = [(39, 129, 113), (164, 80, 133), (83, 122, 114), (99, 81, 172), (95, 56, 104), (37, 84, 86), (14, 89, 122),
         (80, 7, 65), (10, 102, 25),(90, 185, 109), (106, 110, 132), (169, 158, 85), (188, 185, 26), (103, 1, 17), (82, 144, 81), 
         (92, 7, 184), (49, 81, 155), (179, 177, 69), (93, 187, 158), (13, 39, 73), (12, 50, 60), (16, 179, 33), (112, 69, 165), 
         (15, 139, 63), (33, 191, 159), (182, 173, 32), (34, 113, 133), (90, 135, 34), (53, 34, 86), (141, 35, 190), (6, 171, 8), 
@@ -28,32 +29,20 @@ class annotation_fuser:
     def box_and_label(self, ann_data, cvimg, opfname=None, colours = None): #once per bbox
         label, coordinates = ann_data
         pt1, pt2 = coordinates
-        colours = colours if colours else self.colours
-
-        label = result[0] + ' - '+str(np.around(float(result[1]), decimals=2))
-        color = random.choice(colors)
-        cv2.rectangle(cvimg, pt1, pt2, color, 1)
+        colours = colours if colours else self.colour_palatte
+        colour = random.choice(colours)
+        cv2.rectangle(cvimg, pt1, pt2, colour, 1)
         t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 1, 1)[0]
         pt2 = pt1[0] + t_size[0] + 3, pt1[1] + t_size[1] + 4
-        cv2.rectangle(cvimg, pt1, pt2, color, -1)
+        cv2.rectangle(cvimg, pt1, pt2, colour, -1)
         cv2.putText(cvimg, label, (pt1[0], pt1[1] + t_size[1] + 4),cv2.FONT_HERSHEY_PLAIN, 1, [225, 255, 255], 1)
-        if opfname:
-            try:
-                cv2.imwrite(opfname,cvimg)
-                return True
-            except Exception as e:
-                print('Error saving fused output to file\n',e)
-                return False
-        else:
-            return cvimg
+        return cvimg
     
     #annotation_dicts_lst
     def conv2coordinates(self,annotation_dict): #once per file
         #annotations format = {'annotation': {'data_filename': fname, 'data_type': 'image', 'data_annotation': {'bounding_polygon': ['bbox_dicts_lst'], 'bounding_box': ''}}}
         annt = annotation_dict
-        dest_dir = dest_dir+'/' if dest_dir[-1]!='/' else dest_dir
-        bbox_dicts_lst = annotations['annotation']['data_annotation']['bounding_box']
-        'classification_label':tmp[lbk][i],'point_2D'
+        bbox_dicts_lst = annotation_dict['annotation']['data_annotation']['bounding_box']
         ann_data = []
         for d in bbox_dicts_lst:
             label = d['classification_label']
@@ -61,16 +50,27 @@ class annotation_fuser:
             coordinates = tuple(map(lambda x:  tuple(map(lambda v:int(v), x.split(','))),coordinates))
             ann_data.append([label,coordinates])
         self.ann_data = ann_data
+        return ann_data
 
-    def fuse(annotation_dict,parent_dir='detections',dest_dir='fused_output'): #parent dir must be dir containing data and meta
+    def fuse(self,annotation_dict,parent_dir='detections',dest_dir='fused_output'): #parent dir must be dir containing data and meta
         parent_dir = parent_dir+'/' if parent_dir[-1]!='/' else parent_dir
         dest_dir = dest_dir+'/' if dest_dir[-1]!='/' else dest_dir
         img_parent_dir = parent_dir+'data/'
-        filename = parent_dir + annotation_dict['annotation']['data_filename']
+        filename = annotation_dict['annotation']['data_filename']
+        print(filename)
         opfname = dest_dir + filename
+        print(filename)
+        filename = parent_dir + filename
+        print(filename)
         try:
+            if not os.path.isfile(img_parent_dir+filename):
+              print(img_parent_dir+filename,'Not Found!')
+              return
             cvimg = cv2.imread(img_parent_dir + filename)
-            return self.box_and_label(self.conv2coordinates(annotation_dict),cvimg,opfname)
+            for ann in self.conv2coordinates(annotation_dict):
+              cvimg = self.box_and_label(ann,cvimg)
+            print('Saving',opfname)
+            cv2.imwrite(opfname,cvimg)
         except Exception as e:
             print('Error fusing ',filename,'\n',e)
     
@@ -80,26 +80,40 @@ class annotation_fuser:
         input_file = input_file if input_file else self.input_file
         self.input_file = input_file
         self.output_dir = output_dir
-
+        
         exdir = '.'.join(input_file.split('.')[:-1])+'/'
+        meta_path = exdir+'meta/'
         annotations_lst = []
         try:
-            os.mkdir(output_dir,755)
+            try:
+              os.mkdir(exdir)
+              os.mkdir(output_dir)
+            except Exception as e:
+              print('Error creating directories.\n',e)
+            
             with ZipFile(input_file,'r') as zip_file:
                 print('Extracting ',input_file)
-                zip_file.extractall(output_dir)
+                zip_file.extractall(exdir)
                 print('Done')
                 #assume all extracted data now resides in ./detections
-                for anfilename in os.listdir(exdir):
+                for anfilename in os.listdir(meta_path):
                     try:
-                        with open(anfilename,'r') as anf:
+                        with open(meta_path+anfilename,'r') as anf:
+                            print('Loading ',meta_path+anfilename)
                             annotations_lst.append(json.load(anf))
                     except Exception as e:
                         print('Error opening',anfilename,'\n',e)
+            
+            print('Extracted all annotations\n',annotations_lst)            
+            list(map(lambda ann:self.fuse(ann,exdir,output_dir),annotations_lst))
+            
+#             try:
+#               print(os.popen('rm -rf ',exdir).read())
+#             except Exception as e:
+#               print('Error removing '+exdir+' \n',e)  
         except Exception as e:
             print('Error while processing\n',e)
         
-        print('Extracted all annotations\n',annotations_lst)
 
 def build_args_parser():
     parser = argparse.ArgumentParser(description='Tool to fuse image and its annotations and yield image(s) with bouding boxes')
@@ -127,5 +141,5 @@ def main():
         print('\nExample: python2 fuse_annotations.py -i detections.zip -o fused_images \n')
         parser.print_help()
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
