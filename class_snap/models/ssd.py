@@ -22,7 +22,7 @@ import_file_utils() # comment this line while running on notebooks
 
 class ssd:
 
-    def __init__(self, prepared=False,model_name='',env_parent='models/env/'):
+    def __init__(self,model_name='',prepared=False,env_parent='models/env/'):
         #model name is added for uniformity sake
         self.name = 'SSD'
         self.env_dir = 'env_' + self.name

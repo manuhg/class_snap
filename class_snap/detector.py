@@ -26,12 +26,13 @@ class detector:
 
     
 
-    def __init__(self,model_name='yolo'):
+    def __init__(self,model_name='yolo',model_variant='yolov2'):
         self.models['ssd']['model'] = ssd
         self.models['yolo']['model'] = yolo
         #model classes should expose 3 functions: prepare,load,detect
         self.model_name = model_name
+        self.model_variant = model_variant
         self.model = self.models[self.model_name]
 
     def get_model(self):
-        return self.model['model']()
+        return self.model['model'](self.model_variant)
