@@ -55,6 +55,8 @@ class extractor:
         exec_cmd('cp '+' '.join(json_files)+' '+meta_dir)
         #create zip
         #exec_cmd('zip '+zip_name+' -r '+opdir)
+        if zip_name.endswith('zip'):
+            zip_name = zip_name[:zip_name.rfind('.')]
         shutil.make_archive(zip_name, 'zip', opdir)
 
 
