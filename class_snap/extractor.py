@@ -8,11 +8,10 @@ from detector import detector
 class extractor:
     def __init__(self,model_name='ssd',load=True):
         self.model_name = model_name
-        print('Using model',model_name)
         self.prepare()
         self.load()
     
-    def prepare(self,model_name='ssd'):
+    def prepare(self,model_name=None):
         model_name = model_name if model_name else self.model_name
         model_name = model_name if model_name else 'ssd'
         self.model_name = model_name
