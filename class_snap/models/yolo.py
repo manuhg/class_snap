@@ -9,7 +9,7 @@ import random
 def import_file_utils():
   try:
     sys.path.append('..')
-    global exec_cmd
+    global exec_cmd,download_file_urllib
     from fileutils import exec_cmd,download_file_urllib
   except Exception as e:
     print('Unable to import fileutils')
