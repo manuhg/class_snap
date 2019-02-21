@@ -42,8 +42,6 @@ class annotation_fuser:
     
     #annotation_dicts_lst
     def conv2coordinates(self,annotation_dict): #once per file
-        #annotations format = {'annotation': {'data_filename': fname, 'data_type': 'image', 'data_annotation': {'bounding_polygon': ['bbox_dicts_lst'], 'bounding_box': ''}}}
-        annt = annotation_dict
         bbox_dicts_lst = annotation_dict['annotation']['data_annotation']['bounding_box']
         ann_data = []
         for d in bbox_dicts_lst:
