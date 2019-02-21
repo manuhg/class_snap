@@ -4,7 +4,7 @@ import json
 import six.moves.urllib as urllib
 import tarfile
 import zipfile
-
+import numpy as np
 def exec_cmd(cmdstr,echo=True):
   print(os.popen(cmdstr).read() if echo else '',end='')
   
@@ -67,7 +67,7 @@ def save_as_json(dct,parent_dir='./'): # call once per file
       json.dump(dct,f)
     return fname
   except Exception as e:
-    print('Error writing to '+fname)
+    print('Error writing to '+fname,'\n',e)
   return ('Failed!',fname)
   
 def save_as_annotations(output,opdir='./'):

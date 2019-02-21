@@ -30,18 +30,19 @@ def build_args_parser():
     parser.add_argument('-i','--input_video', dest='input_video',help='input video file(s)', default='input_video.mp4', type=str,required=True)
     parser.add_argument('-t','--interval', dest='interval',help='recuring interval (in seconds) at which to take a frame and process', default=1, type=int,required=True)                        
     parser.add_argument('-c','--class_labels', dest='class_labels_file',help='Object class labels to filter frames', default='class_labels.txt', type=str,required=True)
+    parser.add_argument('-m','--model', dest='model_name',help='model name', default='ssd', type=str)
     #parser.add_argument('-id','--input_videos_dir', dest='input_videos_dir',help='Directory Containing input video file(s)', default='videos', type=str)
     #parser.add_argument('-od','--output_dir', dest='output_dir',help='Destination Directory for output', default='output', type=str)
     parser.add_argument('-o','--output_file', dest='zip_name',help='Output zip name', default='detections.zip', type=str)
-    parser.add_argument('-m','--model', dest='model_name',help='model name', default='ssd', type=str)
     return parser
 
 def main():
     #input_file = download_file('https://github.com/manuhg/masknet/raw/master/input_video.mp4',nc=True)
     #interval = 1
-    parser = build_args_parser()  
+    parser = build_args_parser()
     if len(sys.argv) >= 3:
         args = parser.parse_args()
+        print(args)
         input_video = args.input_video
         class_labels_file = args.class_labels_file
         interval = args.interval
