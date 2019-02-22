@@ -8,7 +8,7 @@ import json
 import cv2
 import random
 from fileutils import exec_cmd 
-
+import shutil
 
 class annotation_fuser:
     def __init__(self,input_file=None,output_dir=None):
@@ -98,6 +98,7 @@ class annotation_fuser:
             
             print('Extracted all annotations\n',annotations_lst)            
             list(map(lambda ann:self.fuse(ann,exdir,output_dir),annotations_lst))
+            shutil.make_archive('fused_detections', 'zip', output_dir)
             exec_cmd('rm -rf '+exdir)
         except Exception as e:
             print('Error while processing\n',e)
