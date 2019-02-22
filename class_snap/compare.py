@@ -1,5 +1,7 @@
 import json
 from fileutils import unannotate_all
+from sklearn.metrics import confusion_matrix
+
 # def compare_models():
 #   models = ['yolov2','yolov2-tiny','yolov3-tiny','ssdlite_mobilenet']
 #   results = {}
@@ -7,8 +9,23 @@ from fileutils import unannotate_all
 #     result = run_predictions(model) #TODO run_predictions()
 #     results.update(result)
 #     results_statistical_diff() #TODO results_statistical_diff()
-# print(extractor_.output['input_video-0090s.jpg']['output'])
-# print(unannotate_all(extractor_.annotated_output)['input_video-0090s.jpg']['output'])
+
+class labelencoder:
+  def __init__(self,classes_lst):
+    self.classes_lst = classes_lst
+    self.encode()
+  
+  def encode(self):
+    encoded_classes = {}
+    classes_lst = self.classes_lst
+    for i in range(len(classes_lst)):
+      c = classes_lst[i]
+      encoded_classes[c] = i
+    self.encoded_classes = encoded_classes
+  
+  def transform(self,vals_lst):
+    return [ self.encoded_classes.get(v) for v in vals_lst ]
+
 def convforcomparison(unann_item):
   fname, output = unann_item
   return {fname:output['output']['labels_detected']}
@@ -19,20 +36,47 @@ def convallforcomparison(annotated_output):
     comp_dict.update(d)
   return comp_dict
 
-def get_ground_truth(filename): # a file containing list of annotation dicts per file
-  ground_truth_ann,ground_truth = None,None
+def get_ground_truth_ann(filename): # a file containing list of annotation dicts per file
+  ground_truth_ann = None,None
   try:
     with open(filename,'r') as gtf:
       ground_truth_ann = json.load(gtf)
-      ground_truth = unannotate_all(ground_truth_ann)
   except Exception as e:
     print('Error getting ground truth\n',e)
-  return ground_truth_ann,ground_truth
+  return ground_truth_ann
+
+def calculate_metrics(predicted,ground_truth):#once per file
+  len_diff = len(predicted)-len(ground_truth)
+  len_diff1 = -1 * len_diff if len_diff<0 else len_diff
+  pad = [ '__NAP__' for i in range(len_diff1)]  
+  if len_diff>0: #many false positives i.e more predictions that actual
+      ground_truth = ground_truth + pad
+  elif len_diff<0:
+      predicted = predicted + pad
+
+  #THIS FUNCTION USES __NAP__ - NOT A PREDICTION TO FILL GAPS WHEREVER NECESSARY
+  classes = list(set(ground_truth+predicted))
+  le = labelencoder(classes)
+  
+  ground_truth = le.transform(ground_truth)
+  predicted = le.transform(predicted)
+  cm = confusion_matrix(ground_truth,predicted)
+  colsums = [sum(cm[:,i]) for i in range(cm.shape[0]) ]
+  rowsums = [sum(cm[i,:]) for i in range(cm.shape[1]) ]
+  metrics ={}
+  for i in range(len(classes)):
+    precision = float(cm[i][i])/float(colsums[i]) if colsums[i]!=0 else -1
+    recall = float(cm[i][i])/float(rowsums[i]) if rowsums[i]!=0 else -1
+    f1 = 2 * float(precision * recall) / float(precision + recall) if (precision + recall) !=0 else -1
+    metrics[classes[i]] = {'precision':precision,'recall':recall,'f1':f1}
+  return metrics
 
 def compare_outputs(ground_truth_ann,model_output_ann):
-  ground_truth_labels = unannotate_all(ground_truth_ann)
-
-
+  ground_truth_labels = unannotate_all(ground_truth_ann) #for all files
+  model_output_labels = unannotate_all(model_output_ann) #for all files
+  if ground_truth_labels.keys() != model_output_labels.keys():
+    print('Data mismatch!')
+    return
 
 # a,b=unannotate_all(extractor_.annotated_output),extractor_.output
 # convallforcomparison(b)
