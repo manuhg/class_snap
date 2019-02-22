@@ -38,9 +38,11 @@ class extractor:
         #detection / extraction
         exec_cmd('mkdir '+dest_dir)
         output = self.extract_frames(self.detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=dest_dir)
+        self.output = output
 
         #annotation
-        json_files,failures = save_as_annotations(output,dest_dir)
+        json_files,failures,annotated_output = save_as_annotations(output,dest_dir)
+        self.annotated_output = annotated_output
         if failures:
             print('Failed to write: ',','.join(failures))
 
