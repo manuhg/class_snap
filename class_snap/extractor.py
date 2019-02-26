@@ -64,6 +64,7 @@ class extractor:
 
         if del_after:
             exec_cmd('rm -rf '+dest_dir)
+        return annotated_output
     
     def extract_frames(self,detector, input_file, class_labels, interval=None, dest_dir='.'):# interval if specified should be in terms of seconds
         print('Detection Algorithm:%s\nModel loaded: %s\nInput File: %s\nIntervals at which to detect: %r seconds' % (detector.name, detector.model_name, input_file, interval))

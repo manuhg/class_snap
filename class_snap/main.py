@@ -1,6 +1,7 @@
 #!/usr/bin/python2
 from __future__ import print_function
 from extractor import extractor
+from compare import compare,get_ground_truth_ann
 import os
 import sys
 import argparse
@@ -31,6 +32,7 @@ def build_args_parser():
     parser.add_argument('-c','--class_labels', dest='class_labels_file',help='Object class labels to filter frames', default='class_labels.txt', type=str,required=True)
     parser.add_argument('-m','--model', dest='model_name',help='model name', default='yolo', type=str)
     parser.add_argument('-v','--model_variant', dest='model_variant',help='model variant', type=str)
+    parser.add_argument('-a','--annotations_dir', dest='annotations_dir',help='Directory containing ground truth annotations',default='./', type=str)
     #parser.add_argument('-id','--input_videos_dir', dest='input_videos_dir',help='Directory Containing input video file(s)', default='videos', type=str)
     #parser.add_argument('-od','--output_dir', dest='output_dir',help='Destination Directory for output', default='output', type=str)
     parser.add_argument('-o','--output_file', dest='zip_name',help='Output zip name', default='detections.zip', type=str)
@@ -48,8 +50,9 @@ def main():
         model_name = args.model_name
         model_variant = args.model_variant
         zip_name = args.zip_name
+        annotations_dir = args.annotations_dir
         #input_videos_dir,output_dir,  = args.input_videos_dir, args.output_dir,
-        
+        annotations_dir = annotations_dir+'/' if annotations_dir[-1]!='/' else annotations_dir
         input_video_files, class_labels_to_filter = get_input_data(input_video, class_labels_file)
         #,input_videos_dir=None, allowed_file_types=allowed_file_types)
         
@@ -64,7 +67,11 @@ def main():
         extractor_ = extractor(model_name=model_name,model_variant=model_variant,load=True)
         for input_video_file in input_video_files:
             print(input_video_file,class_labels_to_filter,interval,zip_name)
-            extractor_.process(input_video_file,class_labels_to_filter,interval,zip_name=zip_name)
+            output = extractor_.process(input_video_file,class_labels_to_filter,interval,zip_name=zip_name)
+            ground_truth_ann_file = '.'.join(os.path.basename(input_video_file).split('.')[:-1])+'-every_'+interval+'s.json'
+            #ground_truth = get_ground_truth_ann(annotations_dir+ground_truth_ann_file)
+            #compare(ground_truth,output)
+            compare(output,output) #just to test
     else:
         print('\nExample: python2 main.py -i input_video.mp4 -c class_labels.txt -t 2 -m yolo\n')
         parser.print_help()

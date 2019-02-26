@@ -26,6 +26,19 @@ class labelencoder:
   def transform(self,vals_lst):
     return [ self.encoded_classes.get(v) for v in vals_lst ]
 
+def compare(ground_truth_ann,annotated_output):
+  gt = convallforcomparison(unannotate_all(ground_truth_ann))
+  po = convallforcomparison(unannotate_all(annotated_output))
+  res = {}
+  if len(gt.keys()) != len(po.keys()):
+    print("Error: mismatch of length in ground truth and annotation")
+  
+  for k in gt.keys():
+    evals = calculate_metrics(po[k],gt[k])
+    evals.update(calculate_accuracy(po[k],gt[k]))
+    res.update({k:evals})
+  return res
+
 def convforcomparison(unann_item):
   fname, output = unann_item
   return {fname:output['output']['labels_detected']}
@@ -44,6 +57,10 @@ def get_ground_truth_ann(filename): # a file containing list of annotation dicts
   except Exception as e:
     print('Error getting ground truth\n',e)
   return ground_truth_ann
+
+def calculate_accuracy(predicted,ground_truth):
+  return  {'accuracy':float(len(set(ground_truth) & set(ground_truth)))/float(len(set(ground_truth)))}
+
 
 def calculate_metrics(predicted,ground_truth):#once per file
   len_diff = len(predicted)-len(ground_truth)
