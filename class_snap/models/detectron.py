@@ -19,7 +19,7 @@ import re
 class Detectron:
   def __init__(self,model_name='RetinaNet',env_parent='models/',weights_url=None):
     self.model_name = model_name
-    self.env_parent = env_parent
+    self.env_parent = ''#env_parent
     self.env = 'env/'
     self.env = self.env_parent + self.env
     self.name = 'Detectron'
@@ -144,30 +144,33 @@ class Detectron:
             ext=opext,
             out_when_no_box=True
         )
-      boxes, segms, keypoints, class_ids = vis_utils.convert_from_cls_format(cls_boxes, cls_segms, cls_keyps)
-      
-      if segms is not None and len(segms) > 0:
-        masks = mask_util.decode(segms)
-        color_list = colormap()
-        mask_color_id = 0
-      # sort in order of largest to smallest order to reduce occlusion
-      areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
-      sorted_inds = np.argsort(-areas)
-      for i in sorted_inds:
-        bbox = list(boxes[i, :4])
-        score = boxes[i, -1]
-        if score < threshold:
-            continue
-        class_name = str(self.dataset.classes[class_ids[i]])
-        class_names.append(class_name)
-        bboxes.append(bbox)
     else:
       opdir = opdir+'/' if opdir[-1]!='/' else opdir
       cv2.imwrite(opdir+opfname,cvimg)
+    boxes, segms, keypoints, class_ids = vis_utils.convert_from_cls_format(cls_boxes, cls_segms, cls_keyps)
+      
+    if segms is not None and len(segms) > 0:
+        masks = mask_util.decode(segms)
+        color_list = colormap()
+        mask_color_id = 0
+    # sort in order of largest to smallest order to reduce occlusion
+    areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+    sorted_inds = np.argsort(-areas)
+    for i in sorted_inds:
+      bbox = list(boxes[i, :4])
+      score = boxes[i, -1]
+      if score < threshold:
+          continue
+      class_name = str(self.dataset.classes[class_ids[i]])
+      class_names.append(class_name)
+      bboxes.append(bbox)
+        
     return class_names,bboxes
 
   def detect(self,image,opfile,class_labels_to_filter,visualize=False):
-    labels_detected, bboxes = self.detect_(image,opfile) if opfile else self.detect_(image)
-    labels_matched = list(set(labels_detected)&set(class_labels_to_filter))
-    output_dict = {'bounding_boxes':bboxes,'labels_detected':labels_detected}
-    return {'labels_matched': labels_matched, 'output': output_dict}
+    opfile = opfile if opfile else 'detections.jpg'
+    result = self.detect_(image,opfile,visualize=visualize)
+    labels_detected, bboxes = result
+    labels_matched = [ str(x) for x in list(set(labels_detected)&set(class_labels_to_filter))]
+    output_dict = {str('bounding_boxes'):bboxes,str('labels_detected'):labels_detected}
+    return {str('labels_matched'): labels_matched, str('output'): output_dict}
