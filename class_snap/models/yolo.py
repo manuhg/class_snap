@@ -170,7 +170,7 @@ class yolo:
 
     def detect(self,image,opfile,class_labels_to_filter, visualize=False):
         result  = self.detect_(self.net, self.meta, image, opfile)
-        print(result)
+        #print(result)
         labels_detected = [ r[0] for r in result ]
         labels_matched = list(set(labels_detected) & set(class_labels_to_filter))
         bbox_converted =  [ self.fusecoordinates(self.convert_to_coordinates(r)) for r in result  ]

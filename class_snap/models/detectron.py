@@ -1,4 +1,4 @@
-#from fileutils import *
+from fileutils import *
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -19,7 +19,7 @@ import re
 class Detectron:
   def __init__(self,model_name='RetinaNet',env_parent='models/',weights_url=None):
     self.model_name = model_name
-    self.env_parent = ''#env_parent
+    self.env_parent = env_parent
     self.env = 'env/'
     self.env = self.env_parent + self.env
     self.name = 'Detectron'
@@ -60,8 +60,10 @@ class Detectron:
   def import_dependencies(self):
     global assert_and_infer_cfg,cfg,merge_cfg_from_file,cache_url,setup_logging,Timer,infer_engine,dummy_datasets,c2_utils,vis_utils
     try:
-      sys.path.append(str(os.getcwd()+'/'+self.env[:-1])) #remove the trailing /
-      sys.path.append(str(os.getcwd()+'/'+self.env_dir))
+      #sys.path.append(str(os.getcwd()+'/'+self.env[:-1])) #remove the trailing /
+      detdir = str(os.getcwd()+'/'+self.env_dir)
+      if detdir not in sys.path:
+        sys.path.append(detdir)
       from detectron.core.config import assert_and_infer_cfg
       from detectron.core.config import cfg
       from detectron.core.config import merge_cfg_from_file
@@ -102,9 +104,12 @@ class Detectron:
       print(self.model['weights'],'Not found! . Quitting')
       return
     
-    merge_cfg_from_file(self.model['weights'])
-    cfg.NUM_GPUS = 1
-    assert_and_infer_cfg(cache_urls=False)
+    merge_cfg_from_file(self.model['cfg'])
+    try:
+      cfg.NUM_GPUS = 1
+      assert_and_infer_cfg(cache_urls=False)
+    except Exception as e:
+      print('re setting global values may have caused a warning',e)
     
     assert not cfg.MODEL.RPN_ONLY,'RPN models are not supported'
     assert not cfg.TEST.PRECOMPUTED_PROPOSALS,'Models that require precomputed proposals are not supported'
@@ -113,7 +118,7 @@ class Detectron:
     self.dataset = dummy_datasets.get_coco_dataset()
     
     
-  def detect(self,cvimg,opfname='predictions.jpg',visualize=False,threshold=0.7):
+  def detect_(self,cvimg,opfname='predictions.jpg',visualize=False,threshold=0.7):
     
     with c2_utils.NamedCudaScope(0):
       cls_boxes, cls_segms, cls_keyps = infer_engine.im_detect_all(self.model_obj, cvimg, None)
@@ -121,9 +126,11 @@ class Detectron:
     opdir = '/'.join(opfname.split('/')[:-1])
     opdir = '.' if not opdir else opdir
     opfname = opfname.split('/')[-1]
-    
+    opext = opfname.split('.')[-1]
+    class_names,bboxes = [],[]
     if visualize:
-      vis_utils.vis_one_image( im[:, :, ::-1],  # BGR -> RGB for visualization
+      opfname = '.'.join(opfname.split('.')[:-1])
+      vis_utils.vis_one_image( cvimg[:, :, ::-1],  # BGR -> RGB for visualization
             opfname,
             opdir,
             cls_boxes,
@@ -134,10 +141,33 @@ class Detectron:
             show_class=True,
             thresh=threshold,
             kp_thresh=threshold,
-            ext=args.output_ext,
+            ext=opext,
             out_when_no_box=True
         )
+      boxes, segms, keypoints, class_ids = vis_utils.convert_from_cls_format(cls_boxes, cls_segms, cls_keyps)
+      
+      if segms is not None and len(segms) > 0:
+        masks = mask_util.decode(segms)
+        color_list = colormap()
+        mask_color_id = 0
+      # sort in order of largest to smallest order to reduce occlusion
+      areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+      sorted_inds = np.argsort(-areas)
+      for i in sorted_inds:
+        bbox = list(boxes[i, :4])
+        score = boxes[i, -1]
+        if score < threshold:
+            continue
+        class_name = str(self.dataset.classes[class_ids[i]])
+        class_names.append(class_name)
+        bboxes.append(bbox)
     else:
       opdir = opdir+'/' if opdir[-1]!='/' else opdir
       cv2.imwrite(opdir+opfname,cvimg)
-    return cls_boxes, cls_segms, cls_keyps
+    return class_names,bboxes
+
+  def detect(self,image,opfile,class_labels_to_filter,visualize=False):
+    labels_detected, bboxes = self.detect_(image,opfile) if opfile else self.detect_(image)
+    labels_matched = list(set(labels_detected)&set(class_labels_to_filter))
+    output_dict = {'bounding_boxes':bboxes,'labels_detected':labels_detected}
+    return {'labels_matched': labels_matched, 'output': output_dict}
