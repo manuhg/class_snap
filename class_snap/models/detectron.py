@@ -1,4 +1,4 @@
-from fileutils import *
+#from fileutils import *
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -19,21 +19,20 @@ import re
 class Detectron:
   def __init__(self,model_name='RetinaNet',env_parent='models/',weights_url=None):
     self.model_name = model_name
-    self.env_parent = env_parent
+    self.env_parent = ''#env_parent
     self.env = 'env/'
     self.env = self.env_parent + self.env
     self.name = 'Detectron'
     self.cocoapi = self.env+'/cocoapi'
     self.env_dir = self.env+self.name
     self.pretrained_models_dir = self.env+'pretrained/'
-    self.model = {
-        'weights_url':'https://dl.fbaipublicfiles.com/detectron/36769563/12_2017_baselines/retinanet_X-101-32x8d-FPN_1x.yaml.08_42_05.06JTK6vJ/output/train/coco_2014_train:coco_2014_valminusminival/retinanet/model_final.pkl',
-        }
+    
+    weights_url = weights_url if weights_url else 'https://dl.fbaipublicfiles.com/detectron/36768744/12_2017_baselines/retinanet_R-101-FPN_1x.yaml.08_31_38.5poQe1ZB/output/train/coco_2014_train%3Acoco_2014_valminusminival/retinanet/model_final.pkl'
+    self.model = {'weights_url': weights_url}
     
     self.model['cfg'] = self.env_dir+'/configs/'+re.search(r'/[0-9]+/(.*yaml)',self.model['weights_url']).groups()[0] #12_2017_baselines/retinanet_X-101-32x8d-FPN_2x.yaml'
-    self.model['weights_file']='.'.join(self.model['cfg'].split('/')[-1].split('.')[:-1])
+    self.model['weights_file']='.'.join(self.model['cfg'].split('/')[-1].split('.')[:-1])+'.pkl'
     self.model['weights']=self.pretrained_models_dir+self.model['weights_file']
-    print(self.model)
     
     
   def download_weights(self):
@@ -61,8 +60,8 @@ class Detectron:
   def import_dependencies(self):
     global assert_and_infer_cfg,cfg,merge_cfg_from_file,cache_url,setup_logging,Timer,infer_engine,dummy_datasets,c2_utils,vis_utils
     try:
-      sys.path.append(self.env)
-      sys.path.append(self.env_dir)
+      sys.path.append(str(os.getcwd()+'/'+self.env[:-1])) #remove the trailing /
+      sys.path.append(str(os.getcwd()+'/'+self.env_dir))
       from detectron.core.config import assert_and_infer_cfg
       from detectron.core.config import cfg
       from detectron.core.config import merge_cfg_from_file
@@ -105,6 +104,7 @@ class Detectron:
     
     merge_cfg_from_file(self.model['weights'])
     cfg.NUM_GPUS = 1
+    assert_and_infer_cfg(cache_urls=False)
     
     assert not cfg.MODEL.RPN_ONLY,'RPN models are not supported'
     assert not cfg.TEST.PRECOMPUTED_PROPOSALS,'Models that require precomputed proposals are not supported'
@@ -141,5 +141,3 @@ class Detectron:
       opdir = opdir+'/' if opdir[-1]!='/' else opdir
       cv2.imwrite(opdir+opfname,cvimg)
     return cls_boxes, cls_segms, cls_keyps
-
-    
