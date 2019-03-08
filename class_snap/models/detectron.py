@@ -1,4 +1,3 @@
-from fileutils import *
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -16,18 +15,29 @@ import time
 from caffe2.python import workspace
 import re
 
-class Detectron:
+def import_file_utils():
+  try:
+    sys.path.append('..')
+    global exec_cmd,download_file_urllib
+    from fileutils import exec_cmd,download_file_urllib
+  except Exception as e:
+    print('Unable to import fileutils')
+
+import_file_utils() # comment this line while running on notebooks
+
+class detectron:
   def __init__(self,model_name='RetinaNet',env_parent='models/',weights_url=None):
     self.model_name = model_name
     self.env_parent = ''#env_parent
     self.env = 'env/'
     self.env = self.env_parent + self.env
     self.name = 'Detectron'
-    self.cocoapi = self.env+'/cocoapi'
+    self.cocoapi = self.env+'cocoapi'
     self.env_dir = self.env+self.name
     self.pretrained_models_dir = self.env+'pretrained/'
     
     weights_url = weights_url if weights_url else 'https://dl.fbaipublicfiles.com/detectron/36768744/12_2017_baselines/retinanet_R-101-FPN_1x.yaml.08_31_38.5poQe1ZB/output/train/coco_2014_train%3Acoco_2014_valminusminival/retinanet/model_final.pkl'
+    weights_url = str(weights_url)
     self.model = {'weights_url': weights_url}
     
     self.model['cfg'] = self.env_dir+'/configs/'+re.search(r'/[0-9]+/(.*yaml)',self.model['weights_url']).groups()[0] #12_2017_baselines/retinanet_X-101-32x8d-FPN_2x.yaml'
@@ -42,7 +52,7 @@ class Detectron:
       download_weights = False
     if download_weights:
       print('Downloadng weights:')#,self.model['weights_url'],'=>',self.model['weights'])
-      download_file(self.model['weights_url'],self.model['weights'])
+      download_file_urllib(self.model['weights_url'],self.model['weights'])
       
   def prepare_env(self):
     exec_cmd('mkdir -p '+self.env)

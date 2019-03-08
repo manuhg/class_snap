@@ -18,9 +18,9 @@ class detector:
             output_dict = {'bounding_boxes':bboxes_converted,'labels_detected':labels_detected}
             returns: {'labels_matched': labels_matched, 'output': output_dict}
     '''
-    
-    models = {'ssd': {'name': 'ssd', 'variant': ''},
-              'yolo': {'name': 'yolo', 'variant': 'v2'}}
+    models = {'ssd': {'name': 'ssd', 'variant': 'fasterrcnn'},
+              'yolo': {'name': 'yolo', 'variant': 'v2'},
+              'detectron':{'name':'detectron','variant':'retinanet'}}
     datasets = ['voc', 'imagenet', 'coco']
     dataset = datasets[-1]
 
