@@ -68,10 +68,10 @@ def main():
         for input_video_file in input_video_files:
             print(input_video_file,class_labels_to_filter,interval,zip_name)
             output = extractor_.process(input_video_file,class_labels_to_filter,interval,zip_name=zip_name)
-            ground_truth_ann_file = '.'.join(os.path.basename(input_video_file).split('.')[:-1])+'-every_'+interval+'s.json'
+            ground_truth_ann_file = '.'.join(os.path.basename(input_video_file).split('.')[:-1])+'-every_'+str(interval)+'s.json'
             #ground_truth = get_ground_truth_ann(annotations_dir+ground_truth_ann_file)
             #compare(ground_truth,output)
-            compare(output,output) #just to test
+            #compare(output,output) #just to test
     else:
         print('\nExample: python2 main.py -i input_video.mp4 -c class_labels.txt -t 2 -m yolo\n')
         parser.print_help()

@@ -14,7 +14,7 @@ import sys
 import time
 from caffe2.python import workspace
 import re
-
+import numpy as np
 def import_file_utils():
   try:
     sys.path.append('..')
@@ -188,6 +188,7 @@ class detectron_fb:
   def detect(self,image,opfile,class_labels_to_filter,visualize=False):
     opfile = opfile if opfile else 'detections.jpg'
     result = self.detect_(image,opfile,visualize=visualize)
+    print(result)
     if not result:
       result = [],[]
     labels_detected, bboxes = result

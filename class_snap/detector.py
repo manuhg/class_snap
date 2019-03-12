@@ -1,7 +1,7 @@
 from __future__ import print_function
 from models.ssd import ssd
 from models.yolo import yolo
-from models.detectron import detectron
+from models.detectron_fb import detectron_fb
 
 class detector:
     ''' Generic class to plug in any model wrapped into a class
@@ -29,7 +29,7 @@ class detector:
     def __init__(self,model_name='yolo',model_variant='yolov2'):
         self.models['ssd']['model'] = ssd
         self.models['yolo']['model'] = yolo
-        self.models['detectron']['model'] = detectron
+        self.models['detectron']['model'] = detectron_fb
         #model classes should expose 3 functions: prepare,load,detect
         self.model_name = model_name
         self.model_variant = model_variant
