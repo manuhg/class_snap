@@ -25,17 +25,17 @@ def import_file_utils():
 
 import_file_utils() # comment this line while running on notebooks
 
-class detectron:
+class detectron_fb:
   def __init__(self,model_name='RetinaNet',env_parent='models/',weights_url=None):
     self.model_name = model_name
-    self.env_parent = ''#env_parent
-    self.env = 'env/'
-    self.env = self.env_parent + self.env
+    self.env_parent = env_parent
+    self.env = str(self.env_parent+'env/')
+    self.env = self.env
     self.name = 'Detectron'
     self.cocoapi = self.env+'cocoapi'
     self.env_dir = self.env+self.name
     self.pretrained_models_dir = self.env+'pretrained/'
-    
+    self.prepared = False
     weights_url = weights_url if weights_url else 'https://dl.fbaipublicfiles.com/detectron/36768744/12_2017_baselines/retinanet_R-101-FPN_1x.yaml.08_31_38.5poQe1ZB/output/train/coco_2014_train%3Acoco_2014_valminusminival/retinanet/model_final.pkl'
     weights_url = str(weights_url)
     self.model = {'weights_url': weights_url}
@@ -65,6 +65,7 @@ class detectron:
     exec_cmd('cd '+self.env_dir+' && make')
     exec_cmd('python '+self.env_dir+'/detectron/tests/test_spatial_narrow_as_op.py')
     exec_cmd('mkdir -p '+self.pretrained_models_dir)
+    exec_cmd('ln -s '+self.env_dir+'/detectron detectron')
     self.download_weights()
       
   def import_dependencies(self):
@@ -100,12 +101,16 @@ class detectron:
     if not prepared:
       print('Preparing Environment')
       self.prepare_env()
-      return self.import_dependencies()
-    
-    print('No need to prepare environment')
-    return True
+      self.prepared =  self.import_dependencies()
+    else:
+      self.prepared = True
+      print('No need to prepare environment')
+    return self.prepared
   
   def load(self):
+    if not self.prepared:
+      print('NOT PREPARED. QUITTING')
+      return
     self.download_weights()
     if not os.path.isfile(self.model['cfg']):
       print(self.model['cfg'],'Not found! . Quitting')
@@ -129,6 +134,9 @@ class detectron:
     
     
   def detect_(self,cvimg,opfname='predictions.jpg',visualize=False,threshold=0.7):
+    if not self.prepared:
+      print('NOT PREPARED. QUITTING')
+      return
     
     with c2_utils.NamedCudaScope(0):
       cls_boxes, cls_segms, cls_keyps = infer_engine.im_detect_all(self.model_obj, cvimg, None)
@@ -180,6 +188,8 @@ class detectron:
   def detect(self,image,opfile,class_labels_to_filter,visualize=False):
     opfile = opfile if opfile else 'detections.jpg'
     result = self.detect_(image,opfile,visualize=visualize)
+    if not result:
+      result = [],[]
     labels_detected, bboxes = result
     labels_matched = [ str(x) for x in list(set(labels_detected)&set(class_labels_to_filter))]
     output_dict = {str('bounding_boxes'):bboxes,str('labels_detected'):labels_detected}
