@@ -2,18 +2,28 @@
 from __future__ import print_function
 from extractor import extractor
 from compare import compare,get_ground_truth_ann
+from fileutils import download_youtube_video
 import os
 import sys
 import argparse
 # from compare import compare_models
 allowed_file_types = {'mp4': True, 'avi': True}
+
 def get_input_data(input_video, class_labels_file,input_videos_dir=None, allowed_file_types=None):
     allowed_file_types = allowed_file_types if allowed_file_types else {'mp4': True, 'avi': True}
     input_video_files = []
     class_labels_to_filter = []
     try:
         if len(str(input_video)):
-            input_video_files.append(input_video)
+            if os.path.isfile(input_video):
+                input_video_files.append(input_video)
+            else:
+                filename = download_youtube_video(input_video)
+                if filename and os.path.isfile(filename):
+                    input_video_files.append(filename)
+                else:
+                    print('Not a valid yotube video url or unable to download video from url')
+                
         
         with open(class_labels_file, "r") as labels_file:
             labels_str = labels_file.read()
@@ -27,7 +37,7 @@ def get_input_data(input_video, class_labels_file,input_videos_dir=None, allowed
 
 def build_args_parser():
     parser = argparse.ArgumentParser(description='Tool to extract frames of a video containing specified object(s)')
-    parser.add_argument('-i','--input_video', dest='input_video',help='input video file(s)', default='input_video.mp4', type=str,required=True)
+    parser.add_argument('-i','--input_video', dest='input_video',help='input video file(s) or youtube url of a video', default='input_video.mp4', type=str,required=True)
     parser.add_argument('-t','--interval', dest='interval',help='recuring interval (in seconds) at which to take a frame and process', default=1, type=int,required=True)                        
     parser.add_argument('-c','--class_labels', dest='class_labels_file',help='Object class labels to filter frames', default='class_labels.txt', type=str,required=True)
     parser.add_argument('-m','--model', dest='model_name',help='model name', default='yolo', type=str)
