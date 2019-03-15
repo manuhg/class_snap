@@ -53,8 +53,10 @@ class extractor:
         exec_cmd('rm -rf '+opdir)
         exec_cmd('mkdir -p '+data_dir)
         exec_cmd('mkdir -p '+meta_dir)
-        json_files = [ "'"+jf+"'" for jf in json_files]
-        jpg_files = ["'"+dest_dir+'/'+f+"'" for f in list(output.keys())]
+        
+        #json_files = [ "'"+jf+"'" for jf in json_files]
+        #jpg_files = ["'"+dest_dir+'/'+f+"'" for f in list(output.keys())]
+        jpg_files = [dest_dir+'/'+f for f in list(output.keys())]
         print(json_files,jpg_files)
         exec_cmd('cp '+' '.join(jpg_files)+' '+data_dir)
         exec_cmd('cp '+' '.join(json_files)+' '+meta_dir)

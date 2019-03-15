@@ -20,6 +20,7 @@ def get_input_data(input_video, class_labels_file,input_videos_dir=None, allowed
             else:
                 filename = download_youtube_video(input_video)
                 if filename and os.path.isfile(filename):
+                    filename = filename.replace("\\ ", " ")
                     input_video_files.append(filename)
                 else:
                     print('Not a valid yotube video url or unable to download video from url')
