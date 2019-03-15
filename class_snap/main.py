@@ -2,7 +2,6 @@
 from __future__ import print_function
 from extractor import extractor
 from compare import compare,get_ground_truth_ann
-from fileutils import download_youtube_video
 import os
 import sys
 import argparse
@@ -15,17 +14,7 @@ def get_input_data(input_video, class_labels_file,input_videos_dir=None, allowed
     class_labels_to_filter = []
     try:
         if len(str(input_video)):
-            if os.path.isfile(input_video):
-                input_video_files.append(input_video)
-            else:
-                filename = download_youtube_video(input_video)
-                if filename and os.path.isfile(filename):
-                    filename = filename.replace("\\ ", " ")
-                    input_video_files.append(filename)
-                else:
-                    print('Not a valid yotube video url or unable to download video from url')
-                
-        
+            input_video_files.append(input_video)
         with open(class_labels_file, "r") as labels_file:
             labels_str = labels_file.read()
             class_labels_to_filter = labels_str.replace('\n', ',')

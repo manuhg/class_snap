@@ -2,7 +2,8 @@ from __future__ import print_function
 import cv2
 import json
 import os,sys,time
-from fileutils import download_file, exec_cmd,save_as_annotations
+from fileutils import download_file, exec_cmd,save_as_annotations,download_youtube_video,import_pytube
+
 from detector import detector
 import shutil
 
@@ -27,8 +28,18 @@ class extractor:
     
     def load(self):
         self.detector_model.load()
+        import_pytube()
 
     def process(self,input_file,class_labels_to_filter_by,interval=1,dest_dir='output',zip_name='detections.zip',del_after=True,visualize=False):
+        if not os.path.isfile(input_file):
+            filename = download_youtube_video(input_file)
+            if filename and os.path.isfile(filename):
+                filename = filename.replace("\\ ", " ")
+                input_file = filename
+            else:
+                print('Not a valid yotube video url or unable to download video from url')
+                return
+
         #process
         self.class_labels_to_filter_by = class_labels_to_filter_by
         self.interval = interval
