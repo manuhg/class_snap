@@ -46,6 +46,7 @@ def build_args_parser():
     #parser.add_argument('-id','--input_videos_dir', dest='input_videos_dir',help='Directory Containing input video file(s)', default='videos', type=str)
     #parser.add_argument('-od','--output_dir', dest='output_dir',help='Destination Directory for output', default='output', type=str)
     parser.add_argument('-o','--output_file', dest='zip_name',help='Output zip name', default='detections.zip', type=str)
+    parser.add_argument('-v','--visualize', dest='visualize',help='visualize annotations in output images', default='', type=str)
     return parser
 
 def main():
@@ -64,6 +65,7 @@ def main():
         #input_videos_dir,output_dir,  = args.input_videos_dir, args.output_dir,
         annotations_dir = annotations_dir+'/' if annotations_dir[-1]!='/' else annotations_dir
         input_video_files, class_labels_to_filter = get_input_data(input_video, class_labels_file)
+        visualize = args.visualize
         #,input_videos_dir=None, allowed_file_types=allowed_file_types)
         
         if (not input_video_files) or (not class_labels_to_filter) or (not interval):#(not output_dir) or
@@ -74,10 +76,12 @@ def main():
             print('interval:',interval)
             print('Please check the above')
             exit()
+        if visualize:
+            print('info: option set for visualizing annotations')
         extractor_ = extractor(model_name=model_name,model_variant=model_variant,load=True)
         for input_video_file in input_video_files:
             print(input_video_file,class_labels_to_filter,interval,zip_name)
-            output = extractor_.process(input_video_file,class_labels_to_filter,interval,zip_name=zip_name)
+            output = extractor_.process(input_video_file,class_labels_to_filter,interval,zip_name=zip_name,visualize=visualize)
             ground_truth_ann_file = '.'.join(os.path.basename(input_video_file).split('.')[:-1])+'-every_'+str(interval)+'s.json'
             #ground_truth = get_ground_truth_ann(annotations_dir+ground_truth_ann_file)
             #compare(ground_truth,output)

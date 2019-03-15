@@ -28,7 +28,7 @@ class extractor:
     def load(self):
         self.detector_model.load()
 
-    def process(self,input_file,class_labels_to_filter_by,interval=1,dest_dir='output',zip_name='detections.zip',del_after=True):
+    def process(self,input_file,class_labels_to_filter_by,interval=1,dest_dir='output',zip_name='detections.zip',del_after=True,visualize=False):
         #process
         self.class_labels_to_filter_by = class_labels_to_filter_by
         self.interval = interval
@@ -66,7 +66,7 @@ class extractor:
             exec_cmd('rm -rf '+dest_dir)
         return annotated_output
     
-    def extract_frames(self,detector, input_file, class_labels, interval=None, dest_dir='.'):# interval if specified should be in terms of seconds
+    def extract_frames(self,detector, input_file, class_labels, interval=None, dest_dir='.',visualize=False)):# interval if specified should be in terms of seconds
         print('Detection Algorithm:%s\nModel loaded: %s\nInput File: %s\nIntervals at which to detect: %r seconds' % (detector.name, detector.model_name, input_file, interval))
         interval = interval * 1000  # convert to milliseconds
         target_interval = interval
@@ -100,7 +100,7 @@ class extractor:
             opfname = opfname if opfname else input_file_name + '-'+str(int(i/fps))+':'+str(i % fps)+'.jpg'
             
             t1 = time.time()
-            result = detector.detect(frame, dest_dir+opfname, class_labels)
+            result = detector.detect(frame, dest_dir+opfname, class_labels,visualize=visualize)
             t2 = time.time()
             duration = t2-t1
 
