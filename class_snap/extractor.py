@@ -53,7 +53,9 @@ class extractor:
         exec_cmd('rm -rf '+opdir)
         exec_cmd('mkdir -p '+data_dir)
         exec_cmd('mkdir -p '+meta_dir)
-        exec_cmd('cp '+' '.join([dest_dir+'/'+f for f in list(output.keys())])+' '+data_dir)
+        json_files = [ "'"+jf+"'" for jf in json_files]
+        jpg_file = ["'"+dest_dir+'/'+f+"'" for f in list(output.keys())]
+        exec_cmd('cp '+' '.join(jpg_file)+' '+data_dir)
         exec_cmd('cp '+' '.join(json_files)+' '+meta_dir)
         #create zip
         #exec_cmd('zip '+zip_name+' -r '+opdir)
