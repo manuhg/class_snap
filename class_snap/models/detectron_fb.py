@@ -188,10 +188,10 @@ class detectron_fb:
   def detect(self,image,opfile,class_labels_to_filter,visualize=False):
     opfile = opfile if opfile else 'detections.jpg'
     result = self.detect_(image,opfile,visualize=visualize)
-    print(result)
     if not result:
       result = [],[]
     labels_detected, bboxes = result
     labels_matched = [ str(x) for x in list(set(labels_detected)&set(class_labels_to_filter))]
+    print('classes detected:',labels_detected,'classes matched:',labels_matched)
     output_dict = {str('bounding_boxes'):bboxes,str('labels_detected'):labels_detected}
     return {str('labels_matched'): labels_matched, str('output'): output_dict}

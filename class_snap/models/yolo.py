@@ -169,10 +169,10 @@ class yolo:
         return list(pt1)+list(pt2)
 
     def detect(self,image,opfile,class_labels_to_filter, visualize=False):
-        result  = self.detect_(self.net, self.meta, image, opfile)
-        #print(result)
+        result  = self.detect_(self.net, self.meta, image, opfile,visualize=visualize)
         labels_detected = [ r[0] for r in result ]
         labels_matched = list(set(labels_detected) & set(class_labels_to_filter))
+        print('classes detected:',labels_detected,'classes matched:',labels_matched)
         bbox_converted =  [ self.fusecoordinates(self.convert_to_coordinates(r)) for r in result  ]
         output_dict = {'bounding_boxes': bbox_converted,'labels_detected':labels_detected}
         return {'labels_matched': labels_matched, 'output': output_dict}

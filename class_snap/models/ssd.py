@@ -142,7 +142,7 @@ class ssd:
                            for obj in output_dict['detection_classes']]
         labels_matched = set(labels_detected) & set(
             class_labels_to_filter)
-        print(labels_matched)
+        print('classes detected:',labels_detected,'classes matched:',labels_matched)
         if visualize:
             vis_util.visualize_boxes_and_labels_on_image_array(image_np, output_dict['detection_boxes'], output_dict['detection_classes'], output_dict['detection_scores'],
                                                                category_index, instance_masks=output_dict.get('detection_masks'), use_normalized_coordinates=True, line_thickness=8)
