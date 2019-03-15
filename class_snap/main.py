@@ -83,7 +83,7 @@ def main():
             #compare(ground_truth,output)
             #compare(output,output) #just to test
     else:
-        print('\nExample: python2 main.py -i input_video.mp4 -c class_labels.txt -t 2 -m yolo\n')
+        print("\nExample: python2 main.py -i 'https://www.youtube.com/watch?v=7nnp55fO2dE' -c class_labels.txt -t 10 -m detectron\n")
         parser.print_help()
 
 if __name__ == "__main__":
