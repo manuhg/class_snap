@@ -8,7 +8,7 @@ import numpy as np
 
 def import_pytube():
     try:
-        global Youtube
+        global YouTube
         from pytube import YouTube
         return True
     except Exception as e:
@@ -28,7 +28,7 @@ def download_youtube_video(url):
             return filename
         except Exception as e:
             print('Video not found at url\n',e)
-            
+
 def exec_cmd(cmdstr,echo=True):
   print(os.popen(cmdstr).read() if echo else '',end='')
 
