@@ -37,7 +37,7 @@ class extractor:
 
         #detection / extraction
         exec_cmd('mkdir '+dest_dir)
-        output = self.extract_frames(self.detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=dest_dir)
+        output = self.extract_frames(self.detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=dest_dir,visualize=visualize)
         self.output = output
 
         #annotation
@@ -54,9 +54,9 @@ class extractor:
         exec_cmd('mkdir -p '+data_dir)
         exec_cmd('mkdir -p '+meta_dir)
         
-        #json_files = [ "'"+jf+"'" for jf in json_files]
-        #jpg_files = ["'"+dest_dir+'/'+f+"'" for f in list(output.keys())]
-        jpg_files = [dest_dir+'/'+f for f in list(output.keys())]
+        json_files = [ "'"+jf+"'" for jf in json_files]
+        jpg_files = ["'"+dest_dir+'/'+f+"'" for f in list(output.keys())]
+        #jpg_files = [dest_dir+'/'+f for f in list(output.keys())]
         print(json_files,jpg_files)
         exec_cmd('cp '+' '.join(jpg_files)+' '+data_dir)
         exec_cmd('cp '+' '.join(json_files)+' '+meta_dir)
