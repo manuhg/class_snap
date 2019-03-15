@@ -46,7 +46,7 @@ def build_args_parser():
     #parser.add_argument('-id','--input_videos_dir', dest='input_videos_dir',help='Directory Containing input video file(s)', default='videos', type=str)
     #parser.add_argument('-od','--output_dir', dest='output_dir',help='Destination Directory for output', default='output', type=str)
     parser.add_argument('-o','--output_file', dest='zip_name',help='Output zip name', default='detections.zip', type=str)
-    parser.add_argument('-v','--visualize', dest='visualize',help='visualize annotations in output images', default='', type=str)
+    parser.add_argument('-vz','--visualize', dest='visualize',help='visualize annotations in output images', default='', type=str)
     return parser
 
 def main():
