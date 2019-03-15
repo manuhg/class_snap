@@ -21,13 +21,14 @@ def download_youtube_video(url):
         if not import_pytube():
             print('Fatal! unable to install or import pytube!. Quitting.')
             return False
-        print('Downloading the video at url ',url)
-        try:
-            yt = YouTube(url)#.streams.first().download()
-            filename = yt.streams.first().download()
-            return filename
-        except Exception as e:
-            print('Video not found at url\n',e)
+    
+    print('Downloading the video at url ',url)
+    try:
+      yt = YouTube(url)#.streams.first().download()
+      filename = yt.streams.first().download()
+      return filename
+    except Exception as e:
+      print('Video not found at url\n',e)
 
 def exec_cmd(cmdstr,echo=True):
   print(os.popen(cmdstr).read() if echo else '',end='')
