@@ -72,7 +72,7 @@ class extractor:
         return annotated_output
     
     def extract_frames(self,detector, input_file, class_labels, interval=None, dest_dir='.',visualize=False):# interval if specified should be in terms of seconds
-        print('Detection Algorithm:%s\nModel loaded: %s\nInput File: %s\nIntervals at which to detect: %r seconds' % (detector.name, detector.model_name, input_file, interval))
+        print('Detection Algorithm:%s\nInput File: %s\nIntervals at which to detect: %r seconds' % (detector.name, input_file, interval))
         interval = interval * 1000  # convert to milliseconds
         target_interval = interval
         cap = cv2.VideoCapture(input_file)
