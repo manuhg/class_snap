@@ -36,7 +36,7 @@ class ssd:
         self.available_models = ['ssd_mobilenet_v1_coco_2017_11_17',
                                  'ssd_resnet50_v1_fpn_shared_box_predictor_640x640_coco14_sync_2018_07_03', 'faster_rcnn_nas_coco_2018_01_28']
         
-        self.model_name = self.available_models[-1] if not model_name else model_name
+        self.model_name = self.available_models[-1] #if not model_name else model_name
         self.model_file = self.model_name + '.tar.gz'
         self.model_file_path = self.pretrained_models_dir + '/' +self.model_file
         
