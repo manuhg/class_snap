@@ -83,6 +83,7 @@ class extractor:
         fps = cap.get(cv2.CAP_PROP_FPS)
         input_file_name = '.'.join(input_file.split('.')[:-1])
         total_duration = 0
+        input_file_name = input_file_name.replace("\\ ", " ")
 
         if dest_dir[-1] != '/':
             dest_dir = dest_dir + '/'
