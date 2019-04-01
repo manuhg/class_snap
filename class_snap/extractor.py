@@ -48,7 +48,7 @@ class extractor:
 
         #detection / extraction
         exec_cmd('mkdir '+dest_dir)
-        output = self.extract_frames(self.detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=dest_dir,visualize=visualize)
+        output,total_duration = self.extract_frames(self.detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=dest_dir,visualize=visualize)
         self.output = output
 
         #annotation
@@ -79,7 +79,7 @@ class extractor:
 
         if del_after:
             exec_cmd('rm -rf '+dest_dir)
-        return annotated_output
+        return annotated_output,total_duration
     
     def extract_frames(self,detector, input_file, class_labels, interval=None, dest_dir='.',visualize=False):# interval if specified should be in terms of seconds
         print('Detection Algorithm:%s\nInput File: %s\nIntervals at which to detect: %r seconds' % (detector.name, input_file, interval))
@@ -132,4 +132,4 @@ class extractor:
         print('Total duration:',total_duration)
         cap.release()
         cv2.destroyAllWindows()
-        return output
+        return output,total_duration

@@ -2,6 +2,8 @@ from __future__ import print_function
 import json
 from fileutils import unannotate_all
 from sklearn.metrics import confusion_matrix
+from extractor import extractor
+
 
 # def compare_models():
 #   models = ['yolov2','yolov2-tiny','yolov3-tiny','ssdlite_mobilenet']
@@ -10,6 +12,20 @@ from sklearn.metrics import confusion_matrix
 #     result = run_predictions(model) #TODO run_predictions()
 #     results.update(result)
 #     results_statistical_diff() #TODO results_statistical_diff()
+def compare_models(input_video_files,class_labels_to_filter,interval,zip_name,models = {'yolo':['yolov2','yolov2-tiny','yolov3-tiny'],'detectron':['detectron']}):
+  loaded_models = {}
+  model_times = {}
+  for model_name in list(models.keys()):
+    for model_variant in models[model]:
+      loaded_models[model_name+model_variant] = extractor(model_name=model_name,model_variant=model_variant,load=True)
+  
+  for model_name in list(models.keys()):
+    for model_variant in models[model]:
+      for input_video_file in input_video_files:
+        print(input_video_file,class_labels_to_filter,interval,zip_name)
+        output,total_duration = loaded_models[model_name+model_variant].process(input_video_file,class_labels_to_filter,interval,zip_name=zip_name,visualize=visualize)
+        model_times[model_variant] = total_duration
+  return model_times
 
 class labelencoder:
   def __init__(self,classes_lst):

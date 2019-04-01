@@ -1,7 +1,7 @@
 #!/usr/bin/python2
 from __future__ import print_function
 from extractor import extractor
-from compare import compare,get_ground_truth_ann
+from compare import compare, get_ground_truth_ann, compare_models
 import os
 import sys
 import argparse
@@ -37,7 +37,10 @@ def build_args_parser():
     #parser.add_argument('-od','--output_dir', dest='output_dir',help='Destination Directory for output', default='output', type=str)
     parser.add_argument('-o','--output_file', dest='zip_name',help='Output zip name', default='detections.zip', type=str)
     parser.add_argument('-vz','--visualize', dest='visualize',help='visualize annotations in output images', default='', type=str)
+    parser.add_argument('-cm','--compare_models', dest='compare_models',help='compare models by running given input', default='', type=str)
+
     return parser
+    
 
 def main():
     #input_file = download_file('https://github.com/manuhg/masknet/raw/master/input_video.mp4',nc=True)
@@ -56,6 +59,7 @@ def main():
         annotations_dir = annotations_dir+'/' if annotations_dir[-1]!='/' else annotations_dir
         input_video_files, class_labels_to_filter = get_input_data(input_video, class_labels_file)
         visualize = args.visualize
+        compare_models_ = args.compare_models
         #,input_videos_dir=None, allowed_file_types=allowed_file_types)
         
         if (not input_video_files) or (not class_labels_to_filter) or (not interval):#(not output_dir) or
@@ -68,12 +72,17 @@ def main():
             exit()
         if visualize:
             print('info: option set for visualizing annotations')
+        
+        if compare_models_:
+            compare_models(input_video_files,class_labels_to_filter,interval,zip_name)
+            exit(0)
         extractor_ = extractor(model_name=model_name,model_variant=model_variant,load=True)
         for input_video_file in input_video_files:
             print(input_video_file,class_labels_to_filter,interval,zip_name)
-            output = extractor_.process(input_video_file,class_labels_to_filter,interval,zip_name=zip_name,visualize=visualize)
+            output,total_duration = extractor_.process(input_video_file,class_labels_to_filter,interval,zip_name=zip_name,visualize=visualize)
             ground_truth_ann_file = '.'.join(os.path.basename(input_video_file).split('.')[:-1])+'-every_'+str(interval)+'s.json'
             #ground_truth = get_ground_truth_ann(annotations_dir+ground_truth_ann_file)
+            
             #compare(ground_truth,output)
             #compare(output,output) #just to test
     else:
