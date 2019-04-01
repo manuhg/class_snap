@@ -229,6 +229,6 @@ class ssd:
         try:
             sys.path.append('..')
             global exec_cmd,download_file_urllib
-            from fileutils import exec_cmd,download_file_urllib
+            from fileutils import exec_cmd,download_file_urllib,extract_file_from_tar,download_file
         except Exception as e:
             print('Unable to import fileutils')
