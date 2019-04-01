@@ -16,11 +16,11 @@ def compare_models(input_video_files,class_labels_to_filter,interval,zip_name,mo
   loaded_models = {}
   model_times = {}
   for model_name in list(models.keys()):
-    for model_variant in models[model]:
+    for model_variant in models[model_name]:
       loaded_models[model_name+model_variant] = extractor(model_name=model_name,model_variant=model_variant,load=True)
   
   for model_name in list(models.keys()):
-    for model_variant in models[model]:
+    for model_variant in models[model_name]:
       for input_video_file in input_video_files:
         print(input_video_file,class_labels_to_filter,interval,zip_name)
         output,total_duration = loaded_models[model_name+model_variant].process(input_video_file,class_labels_to_filter,interval,zip_name=zip_name,visualize=visualize)
