@@ -74,7 +74,7 @@ def main():
             print('info: option set for visualizing annotations')
         
         if compare_models_:
-            compare_models(input_video_files,class_labels_to_filter,interval,zip_name)
+            compare_models(input_video_files,class_labels_to_filter,interval,zip_name,visualize=visualize)
             exit(0)
         extractor_ = extractor(model_name=model_name,model_variant=model_variant,load=True)
         for input_video_file in input_video_files:

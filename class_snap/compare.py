@@ -12,7 +12,7 @@ from extractor import extractor
 #     result = run_predictions(model) #TODO run_predictions()
 #     results.update(result)
 #     results_statistical_diff() #TODO results_statistical_diff()
-def compare_models(input_video_files,class_labels_to_filter,interval,zip_name,models = {'yolo':['yolov2','yolov2-tiny','yolov3-tiny'],'detectron':['detectron']}):
+def compare_models(input_video_files,class_labels_to_filter,interval,zip_name,visualize=False,models = {'yolo':['yolov2','yolov2-tiny','yolov3-tiny'],'detectron':['detectron']}):
   loaded_models = {}
   model_times = {}
   for model_name in list(models.keys()):
