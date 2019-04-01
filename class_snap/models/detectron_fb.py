@@ -166,11 +166,7 @@ class detectron_fb:
       opdir = opdir+'/' if opdir[-1]!='/' else opdir
       cv2.imwrite(opdir+opfname,cvimg)
     boxes, segms, keypoints, class_ids = vis_utils.convert_from_cls_format(cls_boxes, cls_segms, cls_keyps)
-      
-    if segms is not None and len(segms) > 0:
-        masks = mask_util.decode(segms)
-        color_list = colormap()
-        mask_color_id = 0
+    
     # sort in order of largest to smallest order to reduce occlusion
     areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
     sorted_inds = np.argsort(-areas)
