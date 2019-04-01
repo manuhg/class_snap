@@ -6,16 +6,6 @@ import cv2
 import numpy as np
 import random
 
-def import_file_utils():
-  try:
-    sys.path.append('..')
-    global exec_cmd,download_file_urllib
-    from fileutils import exec_cmd,download_file_urllib
-  except Exception as e:
-    print('Unable to import fileutils')
-
-import_file_utils() # comment this line while running on notebooks
-
 class BOX(Structure):
     _fields_ = [("x", c_float),
                 ("y", c_float),
@@ -183,6 +173,8 @@ class yolo:
         
         self.pretrained_models_dir = 'pretrained/' if ptmodels is None else ptmodels
 
+        self.import_file_utils()
+
         if env_parent:
             self.env_dir = env_parent + self.env_dir
             self.pretrained_models_dir = env_parent + self.pretrained_models_dir
@@ -330,6 +322,16 @@ class yolo:
         self.predict_image = lib.network_predict_image
         self.predict_image.argtypes = [c_void_p, IMAGE]
         self.predict_image.restype = POINTER(c_float)
+
+    def import_file_utils(self):
+        '''this function was defined outside class but cython namespace throws error. 
+        so this is bad idea i know but i dont want to over complicate this'''
+        try:
+            sys.path.append('..')
+            global exec_cmd,download_file_urllib
+            from fileutils import exec_cmd,download_file_urllib
+        except Exception as e:
+            print('Unable to import fileutils')
     
 
 

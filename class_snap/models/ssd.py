@@ -10,16 +10,6 @@ import cv2
 #from io import StringIO
 #from collections import defaultdict
 
-def import_file_utils():
-  try:
-    sys.path.append('..')
-    global download_file, extract_file_from_tar, exec_cmd
-    from fileutils import download_file, extract_file_from_tar, exec_cmd
-  except Exception as e:
-    print('Unable to import fileutils')
-
-import_file_utils() # comment this line while running on notebooks
-
 class ssd:
 
     def __init__(self,model_name='',prepared=False,env_parent='models/env/'):
@@ -27,6 +17,9 @@ class ssd:
         self.name = 'SSD'
         self.env_dir = 'env_' + self.name
         self.pretrained_models_dir = 'pretrained'
+
+        self.import_file_utils()
+
         if env_parent:
             exec_cmd('mkdir -p '+env_parent)
             self.env_dir = env_parent + self.env_dir
@@ -229,3 +222,13 @@ class ssd:
         except Exception as e:
           print('Error while copying detection graph',e)
         return None
+    
+    def import_file_utils(self):
+        '''this function was defined outside class but cython namespace throws error. 
+        so this is bad idea i know but i dont want to over complicate this'''
+        try:
+            sys.path.append('..')
+            global exec_cmd,download_file_urllib
+            from fileutils import exec_cmd,download_file_urllib
+        except Exception as e:
+            print('Unable to import fileutils')

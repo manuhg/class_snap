@@ -15,15 +15,7 @@ import time
 from caffe2.python import workspace
 import re
 import numpy as np
-def import_file_utils():
-  try:
-    sys.path.append('..')
-    global exec_cmd,download_file_urllib
-    from fileutils import exec_cmd,download_file_urllib
-  except Exception as e:
-    print('Unable to import fileutils')
 
-import_file_utils() # comment this line while running on notebooks
 
 class detectron_fb:
   def __init__(self,model_name='RetinaNet',env_parent='models/',weights_url=None):
@@ -40,6 +32,8 @@ class detectron_fb:
     weights_url = str(weights_url)
     self.model = {'weights_url': weights_url}
     
+    self.import_file_utils()
+
     self.model['cfg'] = self.env_dir+'/configs/'+re.search(r'/[0-9]+/(.*yaml)',self.model['weights_url']).groups()[0] #12_2017_baselines/retinanet_X-101-32x8d-FPN_2x.yaml'
     self.model['weights_file']='.'.join(self.model['cfg'].split('/')[-1].split('.')[:-1])+'.pkl'
     self.model['weights']=self.pretrained_models_dir+self.model['weights_file']
@@ -191,3 +185,13 @@ class detectron_fb:
     print('classes detected:',labels_detected,'classes matched:',labels_matched)
     output_dict = {str('bounding_boxes'):bboxes,str('labels_detected'):labels_detected}
     return {str('labels_matched'): labels_matched, str('output'): output_dict}
+  
+  def import_file_utils(self):
+    '''this function was defined outside class but cython namespace throws error. 
+    so this is bad idea i know but i dont want to over complicate this'''
+    try:
+      sys.path.append('..')
+      global exec_cmd,download_file_urllib
+      from fileutils import exec_cmd,download_file_urllib
+    except Exception as e:
+      print('Unable to import fileutils')
