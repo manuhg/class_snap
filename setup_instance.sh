@@ -37,5 +37,5 @@ conda activate
 
 #conda create -n py2 python=2.7
 sudo apt install libopencv-dev -y
-conda create -n py2 python=2.7 opencv keras sklearn tensorflow-gpu pillow matplotlib numpy future pytorch-nightly -c pytorch
-conda create -n py3 python=3.5 opencv keras sklearn tensorflow-gpu pillow matplotlib numpy pytorch-nightly -c pytorch
+conda create -n py2 python=2.7 opencv keras scikit-learn tensorflow-gpu pillow matplotlib numpy future pytorch-nightly -c pytorch
+conda create -n py3 python=3.5 opencv keras scikit-learn tensorflow-gpu pillow matplotlib numpy pytorch-nightly -c pytorch
