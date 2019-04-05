@@ -48,9 +48,13 @@ class extractor:
 
         #detection / extraction
         exec_cmd('mkdir '+dest_dir)
-        output,total_duration = self.extract_frames(self.detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=dest_dir,visualize=visualize)
+        output,total_duration,successful = self.extract_frames(self.detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=dest_dir,visualize=visualize)
         self.output = output
 
+        if successful<1:
+            print('NO OBJECTS SPECIFIED WERE DETECTED!. Hence no annotations to be saved')
+            exit()
+            
         #annotation
         json_files,failures,annotated_output = save_as_annotations(output,dest_dir)
         self.annotated_output = annotated_output
@@ -90,6 +94,8 @@ class extractor:
         if (cap.isOpened() == False):
             print("Error opening video file", input_file)
         i = 0
+
+        successful = 0
         fps = cap.get(cv2.CAP_PROP_FPS)
         input_file_name = '.'.join(input_file.split('.')[:-1])
         total_duration = 0
@@ -114,7 +120,7 @@ class extractor:
             #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
             opfname = opfname if opfname else input_file_name + '-'+str(int(i/fps))+':'+str(i % fps)+'.jpg'
-            
+            opfname = opfname.split('/')[-1]
             t1 = time.time()
             result = detector.detect(frame, dest_dir+opfname, class_labels,visualize=visualize)
             t2 = time.time()
@@ -124,6 +130,7 @@ class extractor:
             if result and result['labels_matched']:
                 result.update({'time': duration})
                 output.update({opfname: result})
+                successful += 1
             else:
                 print(' - No labels matched. Frame rejected')
             
@@ -132,4 +139,4 @@ class extractor:
         print('Total duration:',total_duration)
         cap.release()
         cv2.destroyAllWindows()
-        return output,total_duration
+        return output,total_duration,successful

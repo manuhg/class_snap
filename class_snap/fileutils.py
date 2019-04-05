@@ -108,7 +108,8 @@ def annotate_image(output_item):  # call once per file
   return annotations
 
 def save_as_json(dct,parent_dir='./'): # call once per file
-  fname = parent_dir+dct['annotation']['data_filename']
+  json_fname = dct['annotation']['data_filename'].split('/')[-1]
+  fname = parent_dir+json_fname
   fname = '.'.join(fname.split('.')[:-1])+'.json'
   fname = fname.replace("\\ ", " ")
   try:
