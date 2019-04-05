@@ -1,5 +1,3 @@
-#configure a cloud instance with nvidia gpu to run class_snap. 
-# this is valid only for ubuntu 16.04 LTS
 #!/bin/sh
 sudo apt-get install gnupg-curl
 wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/cuda-repo-ubuntu1604_10.0.130-1_amd64.deb
@@ -33,11 +31,11 @@ sudo apt-get update \
 wget https://repo.anaconda.com/archive/Anaconda3-2018.12-Linux-x86_64.sh
 chmod +x Anaconda3-2018.12-Linux-x86_64.sh
 ./Anaconda3-2018.12-Linux-x86_64.sh
-source ~/.bashrc
+source .bashrc
 echo "PATH=$PATH:/usr/local/cuda/bin" >> ~/.bashrc
 conda activate
 
 #conda create -n py2 python=2.7
 sudo apt install libopencv-dev -y
 conda create -n py2 python=2.7 opencv keras scikit-learn tensorflow-gpu pillow matplotlib numpy future pytorch-nightly -c pytorch
-conda create -n py3 python=3.5 opencv keras scikit-learn tensorflow-gpu pillow matplotlib numpy  pytorch-nightly -c pytorch
+conda create -n py3 python=3.5 opencv keras scikit-learn tensorflow-gpu pillow matplotlib numpy pytorch-nightly -c pytorch
