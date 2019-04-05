@@ -1,3 +1,5 @@
 bb.sh
 *.pycbb.sh
 *.pyc
+*.c
+*~
