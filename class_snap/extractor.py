@@ -79,10 +79,13 @@ class extractor:
         if zip_name.endswith('zip'):
             zip_name = zip_name[:zip_name.rfind('.')]
         shutil.make_archive(zip_name, 'zip', opdir)
+        zip_name +='.zip'
 
 
         if del_after:
             exec_cmd('rm -rf '+dest_dir)
+            exec_cmd('mkdir '+dest_dir)
+        exec_cmd("mv '"+zip_name+"' "+dest_dir)
         return annotated_output,total_duration
     
     def extract_frames(self,detector, input_file, class_labels, interval=None, dest_dir='.',visualize=False):# interval if specified should be in terms of seconds
