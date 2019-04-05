@@ -40,6 +40,7 @@ class extractor:
                 print('Not a valid yotube video url or unable to download video from url')
                 return
 
+        tmpdir = 'tmp'
         #process
         self.class_labels_to_filter_by = class_labels_to_filter_by
         self.interval = interval
@@ -47,8 +48,8 @@ class extractor:
         self.dest_dir = dest_dir
 
         #detection / extraction
-        exec_cmd('mkdir '+dest_dir)
-        output,total_duration,successful = self.extract_frames(self.detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=dest_dir,visualize=visualize)
+        exec_cmd('mkdir '+tmpdir)
+        output,total_duration,successful = self.extract_frames(self.detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=tmpdir,visualize=visualize)
         self.output = output
 
         if successful<1:
@@ -56,13 +57,14 @@ class extractor:
             exit()
             
         #annotation
-        json_files,failures,annotated_output = save_as_annotations(output,dest_dir)
+        json_files,failures,annotated_output = save_as_annotations(output,tmpdir)
         self.annotated_output = annotated_output
         if failures:
             print('Failed to write: ',','.join(failures))
 
         #moving and re organisation as data and meta
-        opdir = dest_dir+'/detections/'
+
+        opdir = tmpdir+'/detections/'
         data_dir = opdir+'/data'
         meta_dir = opdir+'/meta'
         exec_cmd('rm -rf '+opdir)
@@ -70,8 +72,8 @@ class extractor:
         exec_cmd('mkdir -p '+meta_dir)
         
         json_files = [ "'"+jf+"'" for jf in json_files]
-        jpg_files = ["'"+dest_dir+'/'+f+"'" for f in list(output.keys())]
-        #jpg_files = [dest_dir+'/'+f for f in list(output.keys())]
+        jpg_files = ["'"+tmpdir+'/'+f+"'" for f in list(output.keys())]
+
         exec_cmd('cp '+' '.join(jpg_files)+' '+data_dir)
         exec_cmd('cp '+' '.join(json_files)+' '+meta_dir)
         #create zip
@@ -83,9 +85,12 @@ class extractor:
 
 
         if del_after:
-            exec_cmd('rm -rf '+dest_dir)
-            exec_cmd('mkdir '+dest_dir)
-        exec_cmd("mv '"+zip_name+"' "+dest_dir)
+            exec_cmd('rm -rf '+tmpdir)
+
+        if dest_dir != '.' and dest_dir!='./':
+            exec_cmd('mkdir -p '+dest_dir)
+            exec_cmd("mv '"+zip_name+"' "+dest_dir)
+        
         return annotated_output,total_duration
     
     def extract_frames(self,detector, input_file, class_labels, interval=None, dest_dir='.',visualize=False):# interval if specified should be in terms of seconds

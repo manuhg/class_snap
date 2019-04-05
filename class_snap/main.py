@@ -41,8 +41,8 @@ def build_args_parser():
     parser.add_argument('-m','--model', dest='model_name',help='model name', default='yolo', type=str)
     parser.add_argument('-v','--model_variant', dest='model_variant',help='model variant', type=str)
     parser.add_argument('-a','--annotations_dir', dest='annotations_dir',help='Directory containing ground truth annotations',default='./', type=str)
-    parser.add_argument('-id','--input_videos_dir', dest='input_videos_dir',help='Directory Containing input video file(s)', default='../youtube_download', type=str)
-    parser.add_argument('-od','--output_dir', dest='output_dir',help='Destination Directory for output', default='output', type=str)
+    parser.add_argument('-id','--input_videos_dir', dest='input_videos_dir',help='Directory Containing input video file(s)', default='', type=str)
+    parser.add_argument('-od','--output_dir', dest='output_dir',help='Destination Directory for output', default='./', type=str)
     parser.add_argument('-o','--output_file', dest='zip_name',help='Output zip name', default='detections.zip', type=str)
     parser.add_argument('-vz','--visualize', dest='visualize',help='visualize annotations in output images', default='', type=str)
     parser.add_argument('-cm','--compare_models', dest='compare_models',help='compare models by running given input', default='', type=str)
@@ -92,7 +92,9 @@ def main():
             exit(0)
         extractor_ = extractor(model_name=model_name,model_variant=model_variant,load=True)
         for input_video_file in input_video_files:
-            zip_name_ = zip_name[:zip_name.rfind('.')]+ '-' + '.'.join(input_video_file.split('/')[-1].split('.')[:-1]) + '.zip'
+            name = '.'.join(input_video_file.split('/')[-1].split('.')[:-1])
+            name = '-'+name if name else name
+            zip_name_ = zip_name[:zip_name.rfind('.')]+ name + '.zip'
             print(input_video_file,class_labels_to_filter,interval,zip_name)
             output,total_duration = extractor_.process(input_video_file,class_labels_to_filter,interval,zip_name=zip_name_,visualize=visualize,dest_dir=output_dir)
             ground_truth_ann_file = '.'.join(os.path.basename(input_video_file).split('.')[:-1])+'-every_'+str(interval)+'s.json'
