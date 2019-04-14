@@ -58,19 +58,20 @@ class time_tracker:
     def print_intervals_summary(self):
         if not self.intervals:
             return
-        print('Repeatedly occuring operations:')
+        print('\nRepeatedly occuring operations:',end='')
         for what in self.intervals:
             e = self.intervals[what]['stats']
             if not e:
                 continue
-            print('\n',what,'=>')
-            list(map(lambda x:print(x[0],':',x[1],end=' | '),list(e.items())))
+            print('\n',what,'=>',end='')
+            list(map(lambda x:print(x[0],':',str(round(x[1]),4)+'s',end=' | '),list(e.items())))
 
     def print_summary(self):
         if not self.sorted_data:
             return
+        print('\n')
         for sd in self.sorted_data: #this is a list
-            print(sd[0],':',sd[1]['time'],'seconds')
+            print(sd[0],':',round(sd[1]['time'],4),'s')
 
     def summary(self):
         self.calculate()
