@@ -12,6 +12,7 @@ from time_tracker import time_tracker as tcc
 class extractor:
     def __init__(self,model_name='yolo',model_variant=None,load=True):
         self.tc = tcc()
+        self.tc.note_time('Total Time','begin')
         self.model_name = model_name
         self.model_variant = model_variant
         self.prepare()
@@ -39,7 +40,6 @@ class extractor:
         
 
     def process(self,input_file,class_labels_to_filter_by,interval=1,dest_dir='output',zip_name='detections.zip',del_after=True,visualize=False):
-        self.tc.note_time('Total Time','begin')
         #################### pre process ####################
         tmpdir = 'tmp'
         self.class_labels_to_filter_by = class_labels_to_filter_by
