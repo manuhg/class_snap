@@ -16,7 +16,7 @@ class time_tracker:
         return diff
 
     def interval_start(self,what): #to measure time of repeating events
-        if not self.data.get(what):
+        if not self.intervals.get(what):
             self.intervals[what]={'index':self.ctr,'info':[]}
             self.ctr += 1
         self.intervals[what]['tmp']=time()
@@ -30,7 +30,9 @@ class time_tracker:
     def process_intervals(self):
         for what in self.intervals:
             e = self.intervals[what]['info']
-            self.intervals[what].update({'avg':sum(e)/len(e),'max':max(e),'min':min(e),'total':sum(e)})
+            if not e:
+                continue
+            self.intervals[what]['stats']={'avg':sum(e)/len(e),'max':max(e),'min':min(e),'total':sum(e)}
     
     def note_time(self,what,info):
         if not self.data.get(what):
@@ -58,7 +60,9 @@ class time_tracker:
             return
         print('Repeatedly occuring operations:')
         for what in self.intervals:
-            e = self.intervals[what]['info']
+            e = self.intervals[what]['stats']
+            if not e:
+                continue
             print('\n',what,'=>')
             list(map(lambda x:print(x[0],':',x[1],end=' | '),list(e.items())))
 

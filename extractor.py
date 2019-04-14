@@ -102,9 +102,10 @@ class extractor:
         print('\n###############################')
         print('Overall Time Taken summary')
         self.tc.summary()
-        print('###############################')
+        print('\n###############################')
         print('Detector model time taken summary')
         self.detector_model.tt.summary()
+        print('\n')
         return annotated_output,total_duration
     
     def extract_frames(self,detector, input_file, class_labels, interval=None, dest_dir='.',visualize=False):# interval if specified should be in terms of seconds
