@@ -39,7 +39,7 @@ class extractor:
         
 
     def process(self,input_file,class_labels_to_filter_by,interval=1,dest_dir='output',zip_name='detections.zip',del_after=True,visualize=False):
-        
+        self.tc.note_time('Total Time','begin')
         #################### pre process ####################
         tmpdir = 'tmp'
         self.class_labels_to_filter_by = class_labels_to_filter_by
@@ -99,6 +99,7 @@ class extractor:
             exec_cmd('mkdir -p '+dest_dir)
             exec_cmd("mv '"+zip_name+"' "+dest_dir)
         self.tc.note_time('Save output as annotations','end')
+        self.tc.note_time('Total Time','end')
         print('\n###############################\n')
         print('Overall Time Taken summary')
         self.tc.summary()
