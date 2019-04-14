@@ -27,7 +27,7 @@ class extractor:
         model_variant = model_variant if model_variant else 'yolov2'
         self.model_variant = model_variant
 
-        self.detector_model = detector(model_name,model_variant=model_variant,tcc()).get_model()
+        self.detector_model = detector(model_name,model_variant=model_variant,time_tracker=tcc()).get_model()
         self.detector_model.prepare()
         self.tc.note_time('Prepare/Load object detection model environment','end')
     
@@ -99,9 +99,10 @@ class extractor:
             exec_cmd('mkdir -p '+dest_dir)
             exec_cmd("mv '"+zip_name+"' "+dest_dir)
         self.tc.note_time('Save output as annotations','end')
-        
+        print('\n###############################')
         print('Overall Time Taken summary')
         self.tc.summary()
+        print('###############################')
         print('Detector model time taken summary')
         self.detector_model.tt.summary()
         return annotated_output,total_duration

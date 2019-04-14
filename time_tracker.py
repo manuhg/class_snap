@@ -1,3 +1,4 @@
+from __future__ import print_function
 from time import time
 
 class time_tracker:
@@ -21,7 +22,7 @@ class time_tracker:
         self.intervals[what]['tmp']=time()
 
     def interval_stop(self,what):
-        if not self.data.get(what):
+        if not self.intervals.get(what):
             return
         self.intervals[what]['info'].append(time()-self.intervals[what]['tmp'])
         self.intervals[what]['tmp'] = None
@@ -55,10 +56,10 @@ class time_tracker:
     def print_intervals_summary(self):
         if not self.intervals:
             return
-        print('\nRepeatedly occuring operations:')
+        print('Repeatedly occuring operations:')
         for what in self.intervals:
-            e = self.intervals[what]
-            print(what,'=>')
+            e = self.intervals[what]['info']
+            print('\n',what,'=>')
             list(map(lambda x:print(x[0],':',x[1],end=' | '),list(e.items())))
 
     def print_summary(self):
@@ -70,5 +71,6 @@ class time_tracker:
     def summary(self):
         self.calculate()
         self.sort()
+        self.process_intervals()
         self.print_summary()
         self.print_intervals_summary()
