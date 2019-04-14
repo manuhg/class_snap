@@ -36,6 +36,7 @@ class METADATA(Structure):
 class yolo:
     def prepare_env(self):
         print('Preparing the environment')
+        self.tt.note_time('YOLO prepare environment','begin')
         #if target dir is same as current dir
         if self.td_is_cd:
             exec_cmd('git clone https://github.com/manuhg/darknet '+self.name)
@@ -47,8 +48,10 @@ class yolo:
             exec_cmd('cp -v '+self.src_dir+'/libdarknet* '+self.env_dir)
             exec_cmd('ln -s '+self.data_dir+ ' data')
             exec_cmd('ln -s '+self.cfg_dir+ ' cfg')
+        self.tt.note_time('YOLO prepare environment','end')
     
     def load_shared_lib(self,path=None):
+        self.tt.note_time('YOLO import darknet.so','begin')
         path  = self.shared_lib_path if path is None else path
         if not os.path.isfile(path):
             print(path,' not found')
@@ -56,9 +59,11 @@ class yolo:
         try:
             self.lib = CDLL(path, RTLD_GLOBAL)
             print('Imported libdarknet',self.lib)
+            self.tt.note_time('YOLO import darknet.so','end')
             return True
         except Exception as e:
             print('Error loading shared library ',e)
+        self.tt.note_time('YOLO import darknet.so','end')
         return False
     
     def c_array(self,ctype, values):
@@ -109,11 +114,15 @@ class yolo:
     def detect_(self,net, meta, image, output_file='predictions.jpg', thresh=.5, hier_thresh=.5, nms=.45,visualize=False):
         
         im = self.preprocess_cv_img(image)
-
         num = c_int(0)
         pnum = pointer(num)
+        
+        self.tt.interval_start('YOLO detect objects')
         self.predict_image(net, im)
         dets = self.get_network_boxes(net, im.w, im.h, thresh, hier_thresh, None, 0, pnum)
+        self.tt.interval_stop('YOLO detect objects')
+        
+        self.tt.interval_start('Post detection ops')
         num = pnum[0]
 
         if (nms):
@@ -136,6 +145,7 @@ class yolo:
     
     def load(self):
         try:
+            self.tt.note_time('YOLO load model','begin')
             print('Files:')
             print(self.model['cfg'],'exists? ',os.path.isfile(self.model['cfg']))
             print(self.model['weights'],'exists?', os.path.isfile(self.model['weights']))
@@ -149,9 +159,11 @@ class yolo:
             
             print('Loading metadata')
             self.meta = self.load_meta(self.labels_data)
+            self.tt.note_time('YOLO load model','end')
             return True
         except Exception as e:
             print('Error loading network',e)
+            self.tt.note_time('YOLO load model','end')
         return False
 
     def fusecoordinates(self,coordinates_tuple):
@@ -165,9 +177,11 @@ class yolo:
         print('classes detected:',labels_detected,'classes matched:',labels_matched)
         bbox_converted =  [ self.fusecoordinates(self.convert_to_coordinates(r)) for r in result  ]
         output_dict = {'bounding_boxes': bbox_converted,'labels_detected':labels_detected}
+        self.tt.interval_stop('Post detection ops')
         return {'labels_matched': labels_matched, 'output': output_dict}
 
-    def __init__(self,model_name='yolov2',prepared = False,env_parent='models/env/',env_dir=None,ptmodels=None):
+    def __init__(self,time_tracker,model_name='yolov2',prepared = False,env_parent='models/env/',env_dir=None,ptmodels=None):
+        self.tt=time_tracker
         self.name='YOLO'
         self.env_dir = 'env_'+self.name+'/' if not env_dir else env_dir
         
@@ -239,8 +253,11 @@ class yolo:
             target_file = self.model_name+'.weights'
             if not self.td_is_cd:
                 target_file = self.pretrained_models_dir+self.model_name+'.weights'
+            self.tt.note_time('YOLO download weights for '+self.model_name,'begin')
             download_file_urllib('https://pjreddie.com/media/files/'+self.model_name+'.weights',target_file)
+            self.tt.note_time('YOLO download weights for '+self.model_name,'end')
         
+        self.tt.note_time('YOLO import additional dependencies','begin')
         lib = self.lib
         
         lib.network_width.argtypes = [c_void_p]
@@ -322,6 +339,7 @@ class yolo:
         self.predict_image = lib.network_predict_image
         self.predict_image.argtypes = [c_void_p, IMAGE]
         self.predict_image.restype = POINTER(c_float)
+        self.tt.note_time('YOLO import additional dependencies','end')
 
     def import_file_utils(self):
         '''this function was defined outside class but cython namespace throws error. 

@@ -18,7 +18,8 @@ import numpy as np
 
 
 class detectron_fb:
-  def __init__(self,model_name='RetinaNet',env_parent='models/',weights_url=None):
+  def __init__(self,time_tracker,model_name='RetinaNet',env_parent='models/',weights_url=None):
+    self.tt=time_tracker
     self.model_name = model_name
     self.env_parent = env_parent
     self.env = str(self.env_parent+'env/')
@@ -46,9 +47,12 @@ class detectron_fb:
       download_weights = False
     if download_weights:
       print('Downloadng weights:')#,self.model['weights_url'],'=>',self.model['weights'])
+      self.tt.note_time('Detectron Download weights','begin')
       download_file_urllib(self.model['weights_url'],self.model['weights'])
+      self.tt.note_time('Detectron Download weights','end')
       
   def prepare_env(self):
+    self.tt.note_time('Detectron Prepare Environment','begin')
     exec_cmd('mkdir -p '+self.env)
     exec_cmd('git clone https://github.com/cocodataset/cocoapi.git '+self.cocoapi)
     exec_cmd('cd '+self.cocoapi+'/PythonAPI && make install')
@@ -60,11 +64,13 @@ class detectron_fb:
     exec_cmd('python '+self.env_dir+'/detectron/tests/test_spatial_narrow_as_op.py')
     exec_cmd('mkdir -p '+self.pretrained_models_dir)
     exec_cmd('ln -s '+self.env_dir+'/detectron detectron')
+    self.tt.note_time('Detectron Prepare Environment','end')
     self.download_weights()
       
   def import_dependencies(self):
     global assert_and_infer_cfg,cfg,merge_cfg_from_file,cache_url,setup_logging,Timer,infer_engine,dummy_datasets,c2_utils,vis_utils
     try:
+      self.tt.note_time('Detectron import dependecies','begin')
       #sys.path.append(str(os.getcwd()+'/'+self.env[:-1])) #remove the trailing /
       detdir = str(os.getcwd()+'/'+self.env_dir)
       if detdir not in sys.path:
@@ -88,6 +94,8 @@ class detectron_fb:
       return True
     except Exception as e:
       print('Unable to import detectron dependencies\n',e)
+    finally:
+      self.tt.note_time('Detectron import dependecies','end')
     return False
   
   def prepare(self):
@@ -113,6 +121,7 @@ class detectron_fb:
       print(self.model['weights'],'Not found! . Quitting')
       return
     
+    self.tt.note_time('Detectron load model','begin')
     merge_cfg_from_file(self.model['cfg'])
     try:
       cfg.NUM_GPUS = 1
@@ -125,7 +134,7 @@ class detectron_fb:
 
     self.model_obj = infer_engine.initialize_model_from_cfg(self.model['weights'])
     self.dataset = dummy_datasets.get_coco_dataset()
-    
+    self.tt.note_time('Detectron load model','end')
     
   def detect_(self,cvimg,opfname='predictions.jpg',visualize=False,threshold=0.7):
     if not self.prepared:
@@ -133,8 +142,11 @@ class detectron_fb:
       return
     
     with c2_utils.NamedCudaScope(0):
+      self.tt.interval_start('Detectron detect objects')
       cls_boxes, cls_segms, cls_keyps = infer_engine.im_detect_all(self.model_obj, cvimg, None)
+      self.tt.interval_stop('Detectron detect objects')
     
+    self.tt.interval_start('Post detection ops')
     opdir = '/'.join(opfname.split('/')[:-1])
     opdir = '.' if not opdir else opdir
     opfname = opfname.split('/')[-1]
@@ -178,12 +190,14 @@ class detectron_fb:
   def detect(self,image,opfile,class_labels_to_filter,visualize=False):
     opfile = opfile if opfile else 'detections.jpg'
     result = self.detect_(image,opfile,visualize=visualize)
+    
     if not result:
       result = [],[]
     labels_detected, bboxes = result
     labels_matched = [ str(x) for x in list(set(labels_detected)&set(class_labels_to_filter))]
     print('classes detected:',labels_detected,'classes matched:',labels_matched)
     output_dict = {str('bounding_boxes'):bboxes,str('labels_detected'):labels_detected}
+    self.tt.interval_stop('Post detection ops')
     return {str('labels_matched'): labels_matched, str('output'): output_dict}
   
   def import_file_utils(self):

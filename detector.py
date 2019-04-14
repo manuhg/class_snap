@@ -26,7 +26,7 @@ class detector:
 
     
 
-    def __init__(self,model_name='yolo',model_variant='yolov2'):
+    def __init__(self,model_name='yolo',model_variant='yolov2',time_tracker=None):
         self.models['ssd']['model'] = ssd
         self.models['yolo']['model'] = yolo
         self.models['detectron']['model'] = detectron_fb
@@ -34,6 +34,7 @@ class detector:
         self.model_name = model_name
         self.model_variant = model_variant
         self.model = self.models[self.model_name]
+        self.time_tracker = time_tracker
 
     def get_model(self):
-        return self.model['model'](self.model_variant)
+        return self.model['model'](self.time_tracker,self.model_variant)

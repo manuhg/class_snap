@@ -12,8 +12,9 @@ import cv2
 
 class ssd:
 
-    def __init__(self,model_name='',prepared=False,env_parent='models/env/'):
+    def __init__(self,time_tracker,model_name='',prepared=False,env_parent='models/env/'):
         #model name is added for uniformity sake
+        self.tt=time_tracker
         self.name = 'SSD'
         self.env_dir = 'env_' + self.name
         self.pretrained_models_dir = 'pretrained'
@@ -47,6 +48,7 @@ class ssd:
     def prepare_env(self):
         env_dir = self.env_dir
         print('preparing environment')
+        self.tt.note_time('SSD prepare environment','begin')
         # env preparation since this notebook is being run as standalone
         #exec_cmd('rm -rf * ')
         t1 = time.time()
@@ -64,12 +66,15 @@ class ssd:
         exec_cmd('mv -v '+env_dir+'/md/research/setup.py '+env_dir+'/')
         #exec_cmd('ln -s '+env_dir+'/object_detection/data data')
         exec_cmd('rm -rf '+env_dir+'/md')
+        self.tt.note_time('SSD prepare environment','end')
         tt = time.time()-t1
         print('\nTook ',tt,'seconds ('+str(tt/60)+' minutes) to prepare environment')
     
     def download_and_extract_graph(self):
+      self.tt.note_time('SSD download and extract model graph','begin')
       download_file(self.base_url + self.model_file,self.model_file_path)
       extract_file_from_tar(self.model_file_path, self.frozen_graph_name,self.pretrained_models_dir)
+      self.tt.note_time('SSD download and extract model graph','end')
         
     def prepare(self, prepared=None):
         #prepared = self.prepared if prepared is None else prepared
@@ -91,6 +96,7 @@ class ssd:
     def load(self):
         #load the model aka graph and other required data
         ts = time.time()
+        self.tt.note_time('SSD load model','begin')
         self.lalbels_file = os.path.join(self.env_dir+'/object_detection/data', 'mscoco_label_map.pbtxt')        
         self.detection_graph = self.get_detection_graph(self.frozen_graph)
         if self.detection_graph is None:
@@ -98,11 +104,13 @@ class ssd:
           
         self.category_index = label_map_util.create_category_index_from_labelmap(
             self.lalbels_file, use_display_name=True)
+        self.tt.note_time('SSD load model','end')
         tt = time.time() - ts
         print('\nTime loading the model:',tt,'seconds ('+str(tt/60)+' minutes)')
 
     def import_utils(self):
         try:
+            self.tt.note_time('SSD import dependencies','begin')
             if not os.path.isdir(self.env_dir):
               return False
             sys.path.append(".")
@@ -119,7 +127,9 @@ class ssd:
             exec_cmd('cp -rv object_detection/* ./')    
         except Exception as e:
             print('\n\nError importing from environment from '+self.env_dir+': ', e)
+            self.tt.note_time('SSD import dependencies','end')
             return False
+        self.tt.note_time('SSD import dependencies','end')
         return True
 
 
@@ -129,7 +139,11 @@ class ssd:
         category_index = self.category_index if not category_index else category_index
         image_np = image
         # Actual detection.
+        self.tt.interval_start('SSD detect objects')
         output_dict = self.run_inference_for_single_image(image_np, detection_graph)
+        self.tt.interval_stop('SSD detect objects')
+
+        self.tt.interval_start('SSD Post detection ops')
         # Visualization of the results of a detection.
         labels_detected = [category_index[obj]['name']
                            for obj in output_dict['detection_classes']]
@@ -143,6 +157,7 @@ class ssd:
         
         bboxes_denormalized = list(map(lambda boxes:self.denormalize(boxes,image_np.shape),output_dict['detection_boxes']))        
         output_dict = self.clean_up_entry({'bounding_boxes':bboxes_denormalized,'labels_detected':labels_detected})
+        self.tt.interval_stop('SSD Post detection ops')
         if output_dict:
           return {'labels_matched': labels_matched, 'output': output_dict}
       

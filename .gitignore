@@ -1,5 +1,2 @@
-bb.sh
-*.pycbb.sh
-*.pyc
-*.c
-*~
+env_dir
+__pycache__

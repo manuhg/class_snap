@@ -5,6 +5,8 @@ from compare import compare, get_ground_truth_ann, compare_models
 import os
 import sys
 import argparse
+import time
+
 # from compare import compare_models
 allowed_file_types = {'mp4': True, 'avi': True}
 
@@ -70,7 +72,6 @@ def main():
         visualize = args.visualize
         compare_models_ = args.compare_models
 
-        
         if len(input_video_files)<1:
             print('THERE ARE NO VIDEO FILES AT ../yotube_download or SPECIFY ALTERNATE DIRECTORY --id some_dir')
             exit()
@@ -85,11 +86,7 @@ def main():
             exit()
         if visualize:
             print('info: option set for visualizing annotations')
-        
-            
-        if compare_models_:
-            compare_models(input_video_files,class_labels_to_filter,interval,zip_name,visualize=visualize)
-            exit(0)
+
         extractor_ = extractor(model_name=model_name,model_variant=model_variant,load=True)
         for input_video_file in input_video_files:
             name = '.'.join(input_video_file.split('/')[-1].split('.')[:-1])

@@ -1,6 +1,0 @@
-tensorflow
-matplotlib
-pytorch-nightly
-opencv
-Pillow
-Cython

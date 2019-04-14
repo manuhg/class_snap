@@ -7,14 +7,18 @@ from fileutils import download_file, exec_cmd,save_as_annotations,download_youtu
 from detector import detector
 import shutil
 
+from time_tracker import time_tracker as tcc
+
 class extractor:
     def __init__(self,model_name='yolo',model_variant=None,load=True):
+        self.tc = tcc()
         self.model_name = model_name
         self.model_variant = model_variant
         self.prepare()
         self.load()
     
     def prepare(self,model_name=None,model_variant=None):
+        self.tc.note_time('Prepare/Load object detection model environment','begin')
         model_name = model_name if model_name else self.model_name
         model_name = model_name if model_name else 'yolo'
         self.model_name = model_name
@@ -23,15 +27,27 @@ class extractor:
         model_variant = model_variant if model_variant else 'yolov2'
         self.model_variant = model_variant
 
-        self.detector_model = detector(model_name,model_variant=model_variant).get_model()
+        self.detector_model = detector(model_name,model_variant=model_variant,tcc()).get_model()
         self.detector_model.prepare()
+        self.tc.note_time('Prepare/Load object detection model environment','end')
     
     def load(self):
+        self.tc.note_time('Load Object Detection Model','begin')
         self.detector_model.load()
         import_pytube()
+        self.tc.note_time('Load Object Detection Model','end')
+        
 
     def process(self,input_file,class_labels_to_filter_by,interval=1,dest_dir='output',zip_name='detections.zip',del_after=True,visualize=False):
+        
+        #################### pre process ####################
+        tmpdir = 'tmp'
+        self.class_labels_to_filter_by = class_labels_to_filter_by
+        self.interval = interval
+        dest_dir = dest_dir if dest_dir else 'output'
+        self.dest_dir = dest_dir
         if not os.path.isfile(input_file):
+            self.tc.note_time('Download video from Youtube','begin')
             filename = download_youtube_video(input_file)
             if filename and os.path.isfile(filename):
                 filename = filename.replace("\\ ", " ")
@@ -39,31 +55,23 @@ class extractor:
             else:
                 print('Not a valid yotube video url or unable to download video from url')
                 return
-
-        tmpdir = 'tmp'
-        #process
-        self.class_labels_to_filter_by = class_labels_to_filter_by
-        self.interval = interval
-        dest_dir = dest_dir if dest_dir else 'output'
-        self.dest_dir = dest_dir
-
-        #detection / extraction
+            self.tc.note_time('Download video from Youtube','end')
         exec_cmd('mkdir '+tmpdir)
+        
+        #################### detection / extraction ####################
         output,total_duration,successful = self.extract_frames(self.detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=tmpdir,visualize=visualize)
         self.output = output
-
         if successful<1:
             print('NO OBJECTS SPECIFIED WERE DETECTED!. Hence no annotations to be saved')
             exit()
-            
-        #annotation
+        
+        #################### annotation ####################
+        self.tc.note_time('Save output as annotations','begin')
         json_files,failures,annotated_output = save_as_annotations(output,tmpdir)
         self.annotated_output = annotated_output
         if failures:
             print('Failed to write: ',','.join(failures))
-
-        #moving and re organisation as data and meta
-
+        ###moving and re organisation as data and meta
         opdir = tmpdir+'/detections/'
         data_dir = opdir+'/data'
         meta_dir = opdir+'/meta'
@@ -90,10 +98,16 @@ class extractor:
         if dest_dir != '.' and dest_dir!='./':
             exec_cmd('mkdir -p '+dest_dir)
             exec_cmd("mv '"+zip_name+"' "+dest_dir)
+        self.tc.note_time('Save output as annotations','end')
         
+        print('Overall Time Taken summary')
+        self.tc.summary()
+        print('Detector model time taken summary')
+        self.detector_model.tt.summary()
         return annotated_output,total_duration
     
     def extract_frames(self,detector, input_file, class_labels, interval=None, dest_dir='.',visualize=False):# interval if specified should be in terms of seconds
+        self.tc.note_time('Load video file for frame extraction','begin')
         print('Detection Algorithm:%s\nInput File: %s\nIntervals at which to detect: %r seconds' % (detector.name, input_file, interval))
         interval = interval * 1000  # convert to milliseconds
         target_interval = interval
@@ -112,7 +126,10 @@ class extractor:
         if dest_dir[-1] != '/':
             dest_dir = dest_dir + '/'
 
+        self.tc.note_time('Load video file for frame extraction','end')
+        
         while(cap.isOpened()):
+            self.tc.interval_start('Fetch frame')
             opfname = None
             if interval:
                 cap.set(cv2.CAP_PROP_POS_MSEC, target_interval)
@@ -129,11 +146,15 @@ class extractor:
 
             opfname = opfname if opfname else input_file_name + '-'+str(int(i/fps))+':'+str(i % fps)+'.jpg'
             opfname = opfname.split('/')[-1]
+            self.tc.interval_stop('Fetch frame')
+            self.tc.interval_start('Detect objects in frame')
+            
             t1 = time.time()
             result = detector.detect(frame, dest_dir+opfname, class_labels,visualize=visualize)
-            t2 = time.time()
-            duration = t2-t1
+            duration = time.time()-t1
 
+            self.tc.interval_stop('Detect objects in frame')
+            
             total_duration += duration
             if result and result['labels_matched']:
                 result.update({'time': duration})
