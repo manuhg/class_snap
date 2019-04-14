@@ -64,12 +64,11 @@ class time_tracker:
             if not e:
                 continue
             print('\n',what,'=>',end='')
-            list(map(lambda x:print(x[0],':',str(round(x[1]),4)+'s',end=' | '),list(e.items())))
+            list(map(lambda x:print(x[0],':',str(round(x[1],4))+'s',end=' | '),list(e.items())))
 
     def print_summary(self):
         if not self.sorted_data:
             return
-        print('\n')
         for sd in self.sorted_data: #this is a list
             print(sd[0],':',round(sd[1]['time'],4),'s')
 
@@ -79,3 +78,4 @@ class time_tracker:
         self.process_intervals()
         self.print_summary()
         self.print_intervals_summary()
+        print('\n')
