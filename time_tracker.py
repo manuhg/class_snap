@@ -2,7 +2,9 @@ from __future__ import print_function
 from time import time
 
 class time_tracker:
-    def __init__(self,name='yolo'):
+    def __init__(self,name='yolo',target_type='tracked_obj'):
+        self.target_type = target_type
+        self.filename = target_type+'-time.json'
         self.data = {}
         self.ctr = 1
         self.intervals = {}
@@ -73,7 +75,7 @@ class time_tracker:
             print('\n',what,'=>',end='')
             #list(map(lambda x:print(x[0],':',str(round(x[1],4))+'s',end=' | '),list(e.items())))
             for x in e.items():
-                col = self.intervals[what]['key']+' - '+x[0]
+                col = self.intervals[what]['key']+'-'+x[0]
                 val = round(x[1],4)
                 print(x[0],':',str(val)+'s',end=' | ')
                 if not ddict.get(col):
@@ -101,4 +103,21 @@ class time_tracker:
         self.data_dict.update(self.print_summary())
         self.data_dict.update(self.print_intervals_summary())
         print('\n')
+        self.save_to_file()
         return self.data_dict
+    
+    def save_to_file(self,filename=None):
+        filename = self.filename if not filename
+        with open(filename,'r+') as f:
+            pd_file_dict = pd.DataFrame(json.load(f))
+            pd_data_dict = pd.DataFrame(self.data_dict)
+            df = None
+            if pd_file_dict:
+                df = pd_file_dict
+                try:
+                    df.append(pd_data_dict)
+                except Exception as e:
+                    print('Error while merging data frames',e)
+            else:
+                df = pd_data_dict
+            json.dump(df.to_dict(),f)

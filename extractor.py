@@ -11,7 +11,8 @@ from time_tracker import time_tracker as tcc
 
 class extractor:
     def __init__(self,model_name='yolo',model_variant=None,load=True):
-        self.tc = tcc(model_name)
+        self.name = model_name+('' if model_variant is None else ' - '+model_variant
+        self.tc = tcc(self.name,target_type='extractor'))
         self.tc.note_time('Total Time','begin','Total_time')
         self.model_name = model_name
         self.model_variant = model_variant
@@ -28,7 +29,7 @@ class extractor:
         model_variant = model_variant if model_variant else 'yolov2'
         self.model_variant = model_variant
 
-        self.detector_model = detector(model_name,model_variant=model_variant,time_tracker=tcc(name=self.model_name)).get_model()
+        self.detector_model = detector(model_name,model_variant=model_variant,time_tracker=tcc(name=self.name,target_type='detection_model')).get_model()
         self.detector_model.prepare()
         self.tc.note_time('Init & Prepare model','end')
     
