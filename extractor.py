@@ -99,11 +99,16 @@ class extractor:
         if dest_dir != '.' and dest_dir!='./':
             exec_cmd('mkdir -p '+dest_dir)
             exec_cmd("mv '"+zip_name+"' "+dest_dir)
+        
+        
+        self.tc.set_input_filename(input_file)
         self.tc.note_time('Save output as annotations','end')
         self.tc.note_time('Total Time','end')
         print('\n###############################\n')
         print('Overall Time Taken summary')
         self.tc.summary()
+        
+        self.detection_model.tt.set_input_filename(input_file)
         print('\n###############################\n')
         print('Detector model time taken summary')
         self.detector_model.tt.summary()
