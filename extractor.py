@@ -108,7 +108,7 @@ class extractor:
         print('Overall Time Taken summary')
         self.tc.summary()
         
-        self.detection_model.tt.set_input_filename(input_file)
+        self.detector_model.tt.set_input_filename(input_file)
         print('\n###############################\n')
         print('Detector model time taken summary')
         self.detector_model.tt.summary()
