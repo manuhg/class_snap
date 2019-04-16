@@ -2,10 +2,11 @@ from __future__ import print_function
 from time import time
 
 class time_tracker:
-    def __init__(self):
+    def __init__(self,name='yolo'):
         self.data = {}
         self.ctr = 1
         self.intervals = {}
+        self.data_dict = { } #comfortable for pandas
 
     def time_diff(self,lst,col=1):
         diff = None
@@ -15,13 +16,14 @@ class time_tracker:
         diff = lst[-1][col]-lst[0][col]
         return diff
 
-    def interval_start(self,what): #to measure time of repeating events
+    def interval_start(self,what,kv): #to measure time of repeating events
         if not self.intervals.get(what):
             self.intervals[what]={'index':self.ctr,'info':[]}
             self.ctr += 1
         self.intervals[what]['tmp']=time()
+        self.intervals[what]['key']=kv
 
-    def interval_stop(self,what):
+    def interval_stop(self,what): #kv is index name
         if not self.intervals.get(what):
             return
         self.intervals[what]['info'].append(time()-self.intervals[what]['tmp'])
@@ -34,11 +36,13 @@ class time_tracker:
                 continue
             self.intervals[what]['stats']={'avg':sum(e)/len(e),'max':max(e),'min':min(e),'total':sum(e)}
     
-    def note_time(self,what,info):
+    def note_time(self,what,info,kv=None):
         if not self.data.get(what):
             self.data[what]={'index':self.ctr,'info':[]}
             self.ctr += 1
         self.data[what]['info'].append([info,time()])
+        if kv is not None:
+            self.data[what]['key']=kv
 
     def calculate(self):
         for what in self.data.keys():
@@ -58,24 +62,43 @@ class time_tracker:
     def print_intervals_summary(self):
         if not self.intervals:
             return
+        data,cols =[],[]
+        ddict = {}
         print('\nRepeatedly occuring operations:',end='')
+        
         for what in self.intervals:
             e = self.intervals[what]['stats']
             if not e:
                 continue
             print('\n',what,'=>',end='')
-            list(map(lambda x:print(x[0],':',str(round(x[1],4))+'s',end=' | '),list(e.items())))
-
+            #list(map(lambda x:print(x[0],':',str(round(x[1],4))+'s',end=' | '),list(e.items())))
+            for x in e.items():
+                col = self.intervals[what]['key']+' - '+x[0]
+                val = round(x[1],4)
+                print(x[0],':',str(val+'s',end=' | ')
+                if not ddict.get(col):
+                    ddict[col]=[]
+                ddict[col].append(val)
+        return ddict
+        
     def print_summary(self):
+        ddict = {}
         if not self.sorted_data:
             return
         for sd in self.sorted_data: #this is a list
-            print(sd[0],':',round(sd[1]['time'],4),'s')
+            col = sd[1]['key']
+            val = round(sd[1]['time'],4)
+            if not ddict.get(col):
+                    ddict[col]=[]
+            print(sd[0],':',val,'s')
+            ddict[col].append(val)
+        return ddict
 
     def summary(self):
         self.calculate()
         self.sort()
         self.process_intervals()
-        self.print_summary()
-        self.print_intervals_summary()
+        self.data_dict.update(self.print_summary())
+        self.data_dict.update(self.print_intervals_summary())
         print('\n')
+        return self.data_dict

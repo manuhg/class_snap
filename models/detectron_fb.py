@@ -47,12 +47,12 @@ class detectron_fb:
       download_weights = False
     if download_weights:
       print('Downloadng weights:')#,self.model['weights_url'],'=>',self.model['weights'])
-      self.tt.note_time('Detectron Download weights','begin')
+      self.tt.note_time('Detectron Download weights','begin','dw_weights')
       download_file_urllib(self.model['weights_url'],self.model['weights'])
       self.tt.note_time('Detectron Download weights','end')
       
   def prepare_env(self):
-    self.tt.note_time('Detectron Prepare Environment','begin')
+    self.tt.note_time('Detectron Prepare Environment','begin','env_prepare')
     exec_cmd('mkdir -p '+self.env)
     exec_cmd('git clone https://github.com/cocodataset/cocoapi.git '+self.cocoapi)
     exec_cmd('cd '+self.cocoapi+'/PythonAPI && make install')
@@ -70,7 +70,7 @@ class detectron_fb:
   def import_dependencies(self):
     global assert_and_infer_cfg,cfg,merge_cfg_from_file,cache_url,setup_logging,Timer,infer_engine,dummy_datasets,c2_utils,vis_utils
     try:
-      self.tt.note_time('Detectron import dependecies','begin')
+      self.tt.note_time('Detectron import dependecies','begin','import_deps')
       #sys.path.append(str(os.getcwd()+'/'+self.env[:-1])) #remove the trailing /
       detdir = str(os.getcwd()+'/'+self.env_dir)
       if detdir not in sys.path:
@@ -121,7 +121,7 @@ class detectron_fb:
       print(self.model['weights'],'Not found! . Quitting')
       return
     
-    self.tt.note_time('Detectron load model','begin')
+    self.tt.note_time('Detectron load model','begin','load_model')
     merge_cfg_from_file(self.model['cfg'])
     try:
       cfg.NUM_GPUS = 1
@@ -142,11 +142,11 @@ class detectron_fb:
       return
     
     with c2_utils.NamedCudaScope(0):
-      self.tt.interval_start('Detectron detect objects')
+      self.tt.interval_start('Detectron detect objects','detect')
       cls_boxes, cls_segms, cls_keyps = infer_engine.im_detect_all(self.model_obj, cvimg, None)
       self.tt.interval_stop('Detectron detect objects')
     
-    self.tt.interval_start('Post detection ops')
+    self.tt.interval_start('Post detection ops','post_detection_ops')
     opdir = '/'.join(opfname.split('/')[:-1])
     opdir = '.' if not opdir else opdir
     opfname = opfname.split('/')[-1]

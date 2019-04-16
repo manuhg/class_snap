@@ -12,14 +12,14 @@ from time_tracker import time_tracker as tcc
 class extractor:
     def __init__(self,model_name='yolo',model_variant=None,load=True):
         self.tc = tcc()
-        self.tc.note_time('Total Time','begin')
+        self.tc.note_time('Total Time','begin','Total_time')
         self.model_name = model_name
         self.model_variant = model_variant
         self.prepare()
         self.load()
     
     def prepare(self,model_name=None,model_variant=None):
-        self.tc.note_time('Prepare/Load object detection model environment','begin')
+        self.tc.note_time('Prepare/Load object detection model environment','begin','load_model_env')
         model_name = model_name if model_name else self.model_name
         model_name = model_name if model_name else 'yolo'
         self.model_name = model_name
@@ -28,12 +28,12 @@ class extractor:
         model_variant = model_variant if model_variant else 'yolov2'
         self.model_variant = model_variant
 
-        self.detector_model = detector(model_name,model_variant=model_variant,time_tracker=tcc()).get_model()
+        self.detector_model = detector(model_name,model_variant=model_variant,time_tracker=tcc(name=self.model_name)).get_model()
         self.detector_model.prepare()
         self.tc.note_time('Prepare/Load object detection model environment','end')
     
     def load(self):
-        self.tc.note_time('Load Object Detection Model','begin')
+        self.tc.note_time('Load Object Detection Model','begin','load_model')
         self.detector_model.load()
         import_pytube()
         self.tc.note_time('Load Object Detection Model','end')
@@ -47,7 +47,7 @@ class extractor:
         dest_dir = dest_dir if dest_dir else 'output'
         self.dest_dir = dest_dir
         if not os.path.isfile(input_file):
-            self.tc.note_time('Download video from Youtube','begin')
+            self.tc.note_time('Download video from Youtube','begin','download_video')
             filename = download_youtube_video(input_file)
             if filename and os.path.isfile(filename):
                 filename = filename.replace("\\ ", " ")
@@ -66,7 +66,7 @@ class extractor:
             exit()
         
         #################### annotation ####################
-        self.tc.note_time('Save output as annotations','begin')
+        self.tc.note_time('Save output as annotations','begin','save_annotations')
         json_files,failures,annotated_output = save_as_annotations(output,tmpdir)
         self.annotated_output = annotated_output
         if failures:
@@ -110,7 +110,7 @@ class extractor:
         return annotated_output,total_duration
     
     def extract_frames(self,detector, input_file, class_labels, interval=None, dest_dir='.',visualize=False):# interval if specified should be in terms of seconds
-        self.tc.note_time('Load video file for frame extraction','begin')
+        self.tc.note_time('Load video file for frame extraction','begin','load_video_file')
         print('Detection Algorithm:%s\nInput File: %s\nIntervals at which to detect: %r seconds' % (detector.name, input_file, interval))
         interval = interval * 1000  # convert to milliseconds
         target_interval = interval
@@ -132,7 +132,7 @@ class extractor:
         self.tc.note_time('Load video file for frame extraction','end')
         
         while(cap.isOpened()):
-            self.tc.interval_start('Fetch frame')
+            self.tc.interval_start('Fetch frame','fetch_frane')
             opfname = None
             if interval:
                 cap.set(cv2.CAP_PROP_POS_MSEC, target_interval)
@@ -150,7 +150,7 @@ class extractor:
             opfname = opfname if opfname else input_file_name + '-'+str(int(i/fps))+':'+str(i % fps)+'.jpg'
             opfname = opfname.split('/')[-1]
             self.tc.interval_stop('Fetch frame')
-            self.tc.interval_start('Detect objects in frame')
+            self.tc.interval_start('Detect objects in frame','detect')
             
             t1 = time.time()
             result = detector.detect(frame, dest_dir+opfname, class_labels,visualize=visualize)

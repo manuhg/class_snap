@@ -48,7 +48,7 @@ class ssd:
     def prepare_env(self):
         env_dir = self.env_dir
         print('preparing environment')
-        self.tt.note_time('SSD prepare environment','begin')
+        self.tt.note_time('SSD prepare environment','begin','env_prepare')
         # env preparation since this notebook is being run as standalone
         #exec_cmd('rm -rf * ')
         t1 = time.time()
@@ -71,7 +71,7 @@ class ssd:
         print('\nTook ',tt,'seconds ('+str(tt/60)+' minutes) to prepare environment')
     
     def download_and_extract_graph(self):
-      self.tt.note_time('SSD download and extract model graph','begin')
+      self.tt.note_time('SSD download and extract model graph','begin','dw_weights')
       download_file(self.base_url + self.model_file,self.model_file_path)
       extract_file_from_tar(self.model_file_path, self.frozen_graph_name,self.pretrained_models_dir)
       self.tt.note_time('SSD download and extract model graph','end')
@@ -96,7 +96,7 @@ class ssd:
     def load(self):
         #load the model aka graph and other required data
         ts = time.time()
-        self.tt.note_time('SSD load model','begin')
+        self.tt.note_time('SSD load model','begin','load_model')
         self.lalbels_file = os.path.join(self.env_dir+'/object_detection/data', 'mscoco_label_map.pbtxt')        
         self.detection_graph = self.get_detection_graph(self.frozen_graph)
         if self.detection_graph is None:
@@ -110,7 +110,7 @@ class ssd:
 
     def import_utils(self):
         try:
-            self.tt.note_time('SSD import dependencies','begin')
+            self.tt.note_time('SSD import dependencies','begin','import_deps')
             if not os.path.isdir(self.env_dir):
               return False
             sys.path.append(".")
@@ -139,11 +139,11 @@ class ssd:
         category_index = self.category_index if not category_index else category_index
         image_np = image
         # Actual detection.
-        self.tt.interval_start('SSD detect objects')
+        self.tt.interval_start('SSD detect objects','detect')
         output_dict = self.run_inference_for_single_image(image_np, detection_graph)
         self.tt.interval_stop('SSD detect objects')
 
-        self.tt.interval_start('SSD Post detection ops')
+        self.tt.interval_start('SSD Post detection ops','post_detection_ops')
         # Visualization of the results of a detection.
         labels_detected = [category_index[obj]['name']
                            for obj in output_dict['detection_classes']]
