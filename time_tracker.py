@@ -1,6 +1,7 @@
 from __future__ import print_function
 from time import time
-
+import pandas as pd
+import json
 class time_tracker:
     def __init__(self,name='yolo',target_type='tracked_obj'):
         self.target_type = target_type
@@ -61,7 +62,7 @@ class time_tracker:
             sorted_data.append(sd[k])
         self.sorted_data = sorted_data
 
-    def set_input_filename(input_file):
+    def set_input_filename(self,input_file):
         self.input_file = input_file
         self.data_dict['input_file'] = input_file
 
@@ -111,9 +112,13 @@ class time_tracker:
         return self.data_dict
     
     def save_to_file(self,filename=None):
-        filename = self.filename if not filename
-        with open(filename,'r+') as f:
-            pd_file_dict = pd.DataFrame(json.load(f))
+        filename = self.filename if not filename else filename
+        with open(filename,'w+') as f:
+            pd_file_dict = None
+            try:
+                pd_file_dict = pd.DataFrame(json.load(f))
+            except Exception as e:
+                print('Error reading data from file',e)
             pd_data_dict = pd.DataFrame(self.data_dict)
             df = None
             if pd_file_dict:
