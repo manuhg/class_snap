@@ -11,7 +11,7 @@ from time_tracker import time_tracker as tcc
 
 class extractor:
     def __init__(self,model_name='yolo',model_variant=None,load=True):
-        self.tc = tcc()
+        self.tc = tcc(model_name)
         self.tc.note_time('Total Time','begin','Total_time')
         self.model_name = model_name
         self.model_variant = model_variant
@@ -19,7 +19,7 @@ class extractor:
         self.load()
     
     def prepare(self,model_name=None,model_variant=None):
-        self.tc.note_time('Prepare/Load object detection model environment','begin','load_model_env')
+        self.tc.note_time('Init & Prepare model','begin','init&prepare_model')
         model_name = model_name if model_name else self.model_name
         model_name = model_name if model_name else 'yolo'
         self.model_name = model_name
@@ -30,7 +30,7 @@ class extractor:
 
         self.detector_model = detector(model_name,model_variant=model_variant,time_tracker=tcc(name=self.model_name)).get_model()
         self.detector_model.prepare()
-        self.tc.note_time('Prepare/Load object detection model environment','end')
+        self.tc.note_time('Init & Prepare model','end')
     
     def load(self):
         self.tc.note_time('Load Object Detection Model','begin','load_model')
@@ -132,7 +132,7 @@ class extractor:
         self.tc.note_time('Load video file for frame extraction','end')
         
         while(cap.isOpened()):
-            self.tc.interval_start('Fetch frame','fetch_frane')
+            self.tc.interval_start('Fetch frame','fetch_frame')
             opfname = None
             if interval:
                 cap.set(cv2.CAP_PROP_POS_MSEC, target_interval)

@@ -16,6 +16,7 @@ class ssd:
         #model name is added for uniformity sake
         self.tt=time_tracker
         self.name = 'SSD'
+        self.tt.note_time('SSD Init model','begin','init_model')
         self.env_dir = 'env_' + self.name
         self.pretrained_models_dir = 'pretrained'
 
@@ -44,6 +45,7 @@ class ssd:
                 'Please upgrade your TensorFlow installation to v1.9.* or later!')
         print('Using OpenCV version %r and Tensorflow version %r' %
               (cv2.__version__, tf.__version__))
+        self.tt.note_time('SSD Init model','end')
         
     def prepare_env(self):
         env_dir = self.env_dir

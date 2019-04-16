@@ -6,7 +6,7 @@ class time_tracker:
         self.data = {}
         self.ctr = 1
         self.intervals = {}
-        self.data_dict = { } #comfortable for pandas
+        self.data_dict = {'name':name } #comfortable for pandas
 
     def time_diff(self,lst,col=1):
         diff = None
@@ -75,7 +75,7 @@ class time_tracker:
             for x in e.items():
                 col = self.intervals[what]['key']+' - '+x[0]
                 val = round(x[1],4)
-                print(x[0],':',str(val+'s',end=' | ')
+                print(x[0],':',str(val)+'s',end=' | ')
                 if not ddict.get(col):
                     ddict[col]=[]
                 ddict[col].append(val)

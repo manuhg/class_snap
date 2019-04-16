@@ -122,7 +122,7 @@ class yolo:
         dets = self.get_network_boxes(net, im.w, im.h, thresh, hier_thresh, None, 0, pnum)
         self.tt.interval_stop('YOLO detect objects')
         
-        self.tt.interval_start('Post detection ops')
+        self.tt.interval_start('Post detection ops','post_detection_ops')
         num = pnum[0]
 
         if (nms):
@@ -183,6 +183,7 @@ class yolo:
     def __init__(self,time_tracker,model_name='yolov2',prepared = False,env_parent='models/env/',env_dir=None,ptmodels=None):
         self.tt=time_tracker
         self.name='YOLO'
+        self.tt.note_time('YOLO init model','begin','init_model')
         self.env_dir = 'env_'+self.name+'/' if not env_dir else env_dir
         
         self.pretrained_models_dir = 'pretrained/' if ptmodels is None else ptmodels
@@ -230,6 +231,8 @@ class yolo:
         (62, 39, 2), (49, 99, 180), (49, 119, 155), (153, 50, 183), (125, 38, 3), (129, 87, 143), (49, 87, 40), (128, 62, 120),
         (73, 85, 148), (28, 144, 118), (29, 9, 24), (175, 45, 108), (81, 175, 64), (178, 19, 157), (74, 188, 190), (18, 114, 2),
         (62, 128, 96), (21, 3, 150), (0, 6, 95), (2, 20, 184), (122, 37, 185)]
+
+        self.tt.note_time('YOLO init model','end')
     
     def print_config(self):
         print('env_dir:',self.env_dir,'\nsrc_dir',self.src_dir,'\npretrained models dir',self.pretrained_models_dir,'\ncfg dir',self.cfg_dir,'\ndata dir',self.data_dir)
