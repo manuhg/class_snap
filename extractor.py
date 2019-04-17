@@ -2,7 +2,7 @@ from __future__ import print_function
 import cv2
 import json
 import os,sys,time
-from fileutils import download_file, exec_cmd,save_as_annotations,download_youtube_video,import_pytube
+from fileutils import download_file,save_dicts_to_file, exec_cmd,save_as_annotations,download_youtube_video,import_pytube
 
 from detector import detector
 import shutil
@@ -61,7 +61,7 @@ class extractor:
         
         #################### detection / extraction ####################
         output,total_duration,successful = self.extract_frames(self.detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=tmpdir,visualize=visualize)
-        self.add_data_tts({'det_output':output})
+        save_dicts_to_file(output,'output_data.json')
         self.output = output
         if successful<1:
             print('NO OBJECTS SPECIFIED WERE DETECTED!. Hence no annotations to be saved')
@@ -117,7 +117,7 @@ class extractor:
     
     def add_data_tts(self,dct):
         self.detector_model.tt.add_data(dct)
-        self.tc.data_dict(dct)
+        self.tc.add_data(dct)
 
     def extract_frames(self,detector, input_file, class_labels, interval=None, dest_dir='.',visualize=False):# interval if specified should be in terms of seconds
         self.tc.note_time('Load video file for frame extraction','begin','load_video_file')

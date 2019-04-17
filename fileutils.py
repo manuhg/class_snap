@@ -132,3 +132,29 @@ def save_as_annotations(output,opdir='./'):
   return success,failure,annotated_output
   #result = [{dct['annotation']['data_filename']:save_as_json(dct)} for dct in annotated_output ]
   #return result,list(filter(lambda x: type(tuple(x.items())[0][-1]) is tuple ,gg))
+
+def save_dicts_to_file(data_dict,filename):
+        file_dict = None
+        try:
+            f = open(filename,'r+')
+            file_dict = json.loads(f.read())
+        except Exception as e:
+                print('Cannot open file ',filename,'\nCreating new file')
+                f = open(filename,'w+')
+        finally:
+            f.close()
+      
+        index = 0
+        df = data_dict
+        if file_dict:
+          ks = file_dict.keys()
+          ks.sort()
+          index = int(ks[-1])+1
+          df = file_dict
+        try:
+            df[index]=data_dict
+        except Exception as e:
+            print('Error while merging dicts',e)
+            df = data_dict
+        with open(filename,'w+') as f:
+            json.dump(df,f)
