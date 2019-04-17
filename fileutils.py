@@ -145,16 +145,16 @@ def save_dicts_to_file(data_dict,filename):
             f.close()
       
         index = 0
-        df = data_dict
+        df[index] = data_dict
         if file_dict:
           ks = file_dict.keys()
           ks.sort()
           index = int(ks[-1])+1
           df = file_dict
         try:
-            df[index]=data_dict
+            df[index] = data_dict
         except Exception as e:
             print('Error while merging dicts',e)
-            df = data_dict
+            df[index] = data_dict
         with open(filename,'w+') as f:
             json.dump(df,f)
