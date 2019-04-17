@@ -133,4 +133,5 @@ class time_tracker:
                 print('Error while merging data frames',e)
         else:
             df = pd_data_dict
-        json.dump(df.to_dict(),f)
+        with open(filename,'w+'):
+            json.dump(df.to_dict(),f)
