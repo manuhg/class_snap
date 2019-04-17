@@ -1,0 +1,15 @@
+For a given video with given model
+video duration vs total time
+time per frame vs obj det per frame
+fetch time vs video file size
+detections per frame vs time taken
+time taken for all other things
+
+Different video same model
+
+Same video different model
+detection times scatter plot (individual values and not just avg)
+
+Things to obtain:
+file size
+detections count

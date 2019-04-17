@@ -61,6 +61,7 @@ class extractor:
         
         #################### detection / extraction ####################
         output,total_duration,successful = self.extract_frames(self.detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=tmpdir,visualize=visualize)
+        self.add_data_tts({'det_output':output})
         self.output = output
         if successful<1:
             print('NO OBJECTS SPECIFIED WERE DETECTED!. Hence no annotations to be saved')
@@ -100,27 +101,39 @@ class extractor:
             exec_cmd('mkdir -p '+dest_dir)
             exec_cmd("mv '"+zip_name+"' "+dest_dir)
         
-        
-        self.tc.set_input_filename(input_file)
+        self.add_data_tts({'input_file':input_file})
+
         self.tc.note_time('Save output as annotations','end')
         self.tc.note_time('Total Time','end')
         print('\n###############################\n')
         print('Overall Time Taken summary')
         self.tc.summary()
         
-        self.detector_model.tt.set_input_filename(input_file)
         print('\n###############################\n')
         print('Detector model time taken summary')
         self.detector_model.tt.summary()
         print('\n')
         return annotated_output,total_duration
     
+    def add_data_tts(self,dct):
+        self.detector_model.tt.add_data(dct)
+        self.tc.data_dict(dct)
+
     def extract_frames(self,detector, input_file, class_labels, interval=None, dest_dir='.',visualize=False):# interval if specified should be in terms of seconds
         self.tc.note_time('Load video file for frame extraction','begin','load_video_file')
         print('Detection Algorithm:%s\nInput File: %s\nIntervals at which to detect: %r seconds' % (detector.name, input_file, interval))
         interval = interval * 1000  # convert to milliseconds
         target_interval = interval
         cap = cv2.VideoCapture(input_file)
+        
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frameCount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        video_duration = frameCount/fps
+        self.add_data_tts({'video_duration':video_duration})
+
+        file_size = round(os.stat(input_file).st_size/1048576) #convert to Mbs
+        self.add_data_tts({'video_file_size':file_size})
+
         output = {}  # format: File name : [list of matched labels]
         if (cap.isOpened() == False):
             print("Error opening video file", input_file)

@@ -62,9 +62,8 @@ class time_tracker:
             sorted_data.append(sd[k])
         self.sorted_data = sorted_data
 
-    def set_input_filename(self,input_file):
-        self.input_file = input_file
-        self.data_dict['input_file'] = input_file
+    def add_data(self,dct):
+        self.data_dict.update(dct)
 
     def print_intervals_summary(self):
         if not self.intervals:
