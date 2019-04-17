@@ -128,6 +128,7 @@ class time_tracker:
         df = pd_file_dict
         try:
             df = df.append(pd_data_dict)
+            df.index = range(len(df))
         except Exception as e:
             print('Error while merging data frames',e)
             df = pd_data_dict
