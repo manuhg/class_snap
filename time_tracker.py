@@ -116,22 +116,21 @@ class time_tracker:
         pd_file_dict = None
         try:
             f = open(filename,'r+')
-            pd_file_dict = pd.DataFrame(json.load(f))
+            pd_file_dict = pd.DataFrame(json.loads(f.read()))
         except Exception as e:
                 print('Cannot open file ',filename,'\nCreating new file')
-                f = open(filename,'w+')
+                f = open(filename,'a+')
+                f.write(' ')
         finally:
             f.close()
         
         pd_data_dict = pd.DataFrame(self.data_dict)
-        df = None
-        if pd_file_dict is not None:
-            df = pd_file_dict
-            try:
-                df.append(pd_data_dict)
-            except Exception as e:
-                print('Error while merging data frames',e)
-        else:
+        df = pd_file_dict
+        try:
+            df.append(pd_data_dict)
+        except Exception as e:
+            print('Error while merging data frames\ntaking only current data')
             df = pd_data_dict
-        with open(filename,'w+'):
+        print(df)
+        with open(filename,'w+') as f:
             json.dump(df.to_dict(),f)
