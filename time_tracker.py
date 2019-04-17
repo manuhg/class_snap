@@ -125,13 +125,11 @@ class time_tracker:
         
         pd_data_dict = pd.DataFrame(self.data_dict)
         df = None
-        if pd_file_dict is not None:
-            df = pd_file_dict
-            try:
-                df = df.append(pd_data_dict)
-            except Exception as e:
-                print('Error while merging data frames',e)
-        else:
+        df = pd_file_dict
+        try:
+            df = df.append(pd_data_dict)
+        except Exception as e:
+            print('Error while merging data frames',e)
             df = pd_data_dict
         with open(filename,'w+') as f:
             json.dump(df.to_dict(),f)
