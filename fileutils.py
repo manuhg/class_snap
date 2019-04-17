@@ -145,6 +145,7 @@ def save_dicts_to_file(data_dict,filename):
             f.close()
       
         index = 0
+        df = {}
         df[index] = data_dict
         if file_dict:
           ks = file_dict.keys()

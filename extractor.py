@@ -113,6 +113,8 @@ class extractor:
         print('Detector model time taken summary')
         self.detector_model.tt.summary()
         print('\n')
+        save_dicts_to_file(self.detector_model.tt.intervals,'det-intervals_data.json')
+        save_dicts_to_file(self.tc.intervals,'ext-intervals_data.json')
         return annotated_output,total_duration
     
     def add_data_tts(self,dct):
