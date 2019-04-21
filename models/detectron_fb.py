@@ -144,7 +144,7 @@ class detectron_fb:
     with c2_utils.NamedCudaScope(0):
       self.tt.interval_start('Detectron detect objects','detect')
       cls_boxes, cls_segms, cls_keyps = infer_engine.im_detect_all(self.model_obj, cvimg, None)
-      self.tt.interval_stop('Detectron detect objects')
+      self.tt.interval_stop('Detectron detect objects',True if cls_boxes else False)
     
     self.tt.interval_start('Post detection ops','post_detection_ops')
     opdir = '/'.join(opfname.split('/')[:-1])
@@ -197,7 +197,7 @@ class detectron_fb:
     labels_matched = [ str(x) for x in list(set(labels_detected)&set(class_labels_to_filter))]
     print('classes detected:',labels_detected,'classes matched:',labels_matched)
     output_dict = {str('bounding_boxes'):bboxes,str('labels_detected'):labels_detected}
-    self.tt.interval_stop('Post detection ops')
+    self.tt.interval_stop('Post detection ops',True if labels_detected else False)
     return {str('labels_matched'): labels_matched, str('output'): output_dict}
   
   def import_file_utils(self):

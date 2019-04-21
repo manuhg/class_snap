@@ -120,7 +120,7 @@ class yolo:
         self.tt.interval_start('YOLO detect objects','detect')
         self.predict_image(net, im)
         dets = self.get_network_boxes(net, im.w, im.h, thresh, hier_thresh, None, 0, pnum)
-        self.tt.interval_stop('YOLO detect objects')
+        self.tt.interval_stop('YOLO detect objects',True if dets else False)
         
         self.tt.interval_start('Post detection ops','post_detection_ops')
         num = pnum[0]
@@ -177,7 +177,7 @@ class yolo:
         print('classes detected:',labels_detected,'classes matched:',labels_matched)
         bbox_converted =  [ self.fusecoordinates(self.convert_to_coordinates(r)) for r in result  ]
         output_dict = {'bounding_boxes': bbox_converted,'labels_detected':labels_detected}
-        self.tt.interval_stop('Post detection ops')
+        self.tt.interval_stop('Post detection ops',True if labels_detected else False)
         return {'labels_matched': labels_matched, 'output': output_dict}
 
     def __init__(self,time_tracker,model_name='yolov2',prepared = False,env_parent='models/env/',env_dir=None,ptmodels=None):

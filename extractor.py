@@ -177,15 +177,18 @@ class extractor:
             result = detector.detect(frame, dest_dir+opfname, class_labels,visualize=visualize)
             duration = time.time()-t1
 
-            self.tc.interval_stop('Detect objects in frame')
             
             total_duration += duration
+            frame_rejected = True
             if result and result['labels_matched']:
                 result.update({'time': duration})
                 output.update({opfname: result})
                 successful += 1
+                frame_rejected = False
             else:
                 print(' - No labels matched. Frame rejected')
+            
+            self.tc.interval_stop('Detect objects in frame',frame_rejected)
             
         print('Frames processed :', i)
         print('Overall Processing speed per image', (total_duration)/i)
