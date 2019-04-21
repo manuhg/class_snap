@@ -197,7 +197,7 @@ class detectron_fb:
     labels_matched = [ str(x) for x in list(set(labels_detected)&set(class_labels_to_filter))]
     print('classes detected:',labels_detected,'classes matched:',labels_matched)
     output_dict = {str('bounding_boxes'):bboxes,str('labels_detected'):labels_detected}
-    self.tt.interval_stop('Post detection ops',True if labels_detected else False)
+    self.tt.interval_stop('Post detection ops',len(labels_detected))
     return {str('labels_matched'): labels_matched, str('output'): output_dict}
   
   def import_file_utils(self):

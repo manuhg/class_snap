@@ -159,7 +159,7 @@ class ssd:
         
         bboxes_denormalized = list(map(lambda boxes:self.denormalize(boxes,image_np.shape),output_dict['detection_boxes']))        
         output_dict = self.clean_up_entry({'bounding_boxes':bboxes_denormalized,'labels_detected':labels_detected})
-        self.tt.interval_stop('SSD Post detection ops',True if labels_detected else False)
+        self.tt.interval_stop('SSD Post detection ops',len(labels_detected))
         if output_dict:
           return {'labels_matched': labels_matched, 'output': output_dict}
       
