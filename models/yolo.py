@@ -120,7 +120,7 @@ class yolo:
         self.tt.interval_start('YOLO detect objects','detect')
         self.predict_image(net, im)
         dets = self.get_network_boxes(net, im.w, im.h, thresh, hier_thresh, None, 0, pnum)
-        self.tt.interval_stop('YOLO detect objects',True if dets else False)
+        self.tt.interval_stop('YOLO detect objects')
         
         self.tt.interval_start('Post detection ops','post_detection_ops')
         num = pnum[0]

@@ -179,16 +179,16 @@ class extractor:
 
             
             total_duration += duration
-            frame_rejected = True
+            frame_accepted = False
             if result and result['labels_matched']:
                 result.update({'time': duration})
                 output.update({opfname: result})
                 successful += 1
-                frame_rejected = False
+                frame_accepted = True
             else:
                 print(' - No labels matched. Frame rejected')
             
-            self.tc.interval_stop('Detect objects in frame',frame_rejected)
+            self.tc.interval_stop('Detect objects in frame',frame_accepted)
             
         print('Frames processed :', i)
         print('Overall Processing speed per image', (total_duration)/i)

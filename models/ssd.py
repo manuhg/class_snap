@@ -143,7 +143,7 @@ class ssd:
         # Actual detection.
         self.tt.interval_start('SSD detect objects','detect')
         output_dict = self.run_inference_for_single_image(image_np, detection_graph)
-        self.tt.interval_stop('SSD detect objects',True if output_dict['detection_classes'] else False)
+        self.tt.interval_stop('SSD detect objects')
 
         self.tt.interval_start('SSD Post detection ops','post_detection_ops')
         # Visualization of the results of a detection.

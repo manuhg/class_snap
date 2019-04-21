@@ -30,7 +30,7 @@ class time_tracker:
         if not self.intervals.get(what):
             return
         self.intervals[what]['info'].append(time()-self.intervals[what]['tmp'])
-        self.intervals[what]['sucess'].append(success)
+        self.intervals[what]['success'].append(success)
         self.intervals[what]['tmp'] = None
 
     def process_intervals(self):
