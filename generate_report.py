@@ -96,8 +96,8 @@ def info_det(dct):
 
 def merge_intervals_info(detector_intervals):
     rj = {}
-    for k in dts[1].keys():
-        d = dts[1][k]
+    for k in detector_intervals[1].keys():
+        d = detector_intervals[1][k]
         rj[k]={'post_detection_ops':d['post_detection_ops'][0],'success':d['post_detection_ops'][1],'detect':d['detect'][0]}
     return rj
 
