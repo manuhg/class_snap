@@ -60,7 +60,7 @@ def round_cols(df,cols,digits=4):
     df.loc[:,cols] = round(df.loc[:,cols],digits)
     return df
 
-def get_intervals_data():
+def get_intervals_data(intervals_dicts):
     its = list(map(read_dict,intervals_dicts))
     return its
 
@@ -170,7 +170,7 @@ def generate_report():
 
     #detections_count, detections_sum = count_elems(detections_lst)
 
-    dts = list(map(get_int_info,get_intervals_data()))
+    dts = list(map(get_int_info,get_intervals_data(intervals_dicts)))
     ints_ex,ints_dm = list(map(info_det,dts)) #intervals data
     detector_intervals_merged = merge_intervals_info(dts[1])
     ints_dm = cpy_det_sucess_data(detector_intervals_merged,ints_dm)
