@@ -2,6 +2,7 @@
 from __future__ import print_function
 from extractor import extractor
 from compare import compare, get_ground_truth_ann, compare_models
+from generate_report import generate_report
 import os
 import sys
 import argparse
@@ -94,6 +95,7 @@ def main():
             zip_name_ = zip_name[:zip_name.rfind('.')]+ name + '.zip'
             print(input_video_file,class_labels_to_filter,interval,zip_name)
             output,total_duration = extractor_.process(input_video_file,class_labels_to_filter,interval,zip_name=zip_name_,visualize=visualize,dest_dir=output_dir)
+            generate_report()
             ground_truth_ann_file = '.'.join(os.path.basename(input_video_file).split('.')[:-1])+'-every_'+str(interval)+'s.json'
             #ground_truth = get_ground_truth_ann(annotations_dir+ground_truth_ann_file)
             
