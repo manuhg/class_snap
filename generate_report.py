@@ -1,3 +1,5 @@
+import os
+import sys
 import seaborn as sns
 import matplotlib
 from matplotlib import pyplot as plt
@@ -56,8 +58,11 @@ def read_dict(jsonfile):
         op = json.load(f)
     return op
 
+def rc(data,digits=4):
+    return round(data,digits)
+
 def round_cols(df,cols,digits=4):
-    df.loc[:,cols] = round(df.loc[:,cols],digits)
+    df.loc[:,cols] = df.loc[:,cols].apply(rc)
     return df
 
 def get_intervals_data(intervals_dicts):
@@ -218,4 +223,5 @@ def generate_report():
     save_figs_as_pdf([fig1,fig2],'Report.pdf')
 
 if __name__=="__main__":
-    generate_report()
+    #generate_report()
+    print(os.popen('jupyter nbconvert --execute Plot_data.ipynb').read())
