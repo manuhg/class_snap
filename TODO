@@ -5,7 +5,7 @@ fetch time vs video file size
 detections per frame vs time taken
 time taken for all other things
 
-Different video same model
+x Different video same model
 
 Same video different model
 detection times scatter plot (individual values and not just avg)

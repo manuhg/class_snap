@@ -6,7 +6,7 @@ from fileutils import download_file,save_dicts_to_file, exec_cmd,save_as_annotat
 
 from detector import detector
 import shutil
-
+from videoqueue import Videoqueue
 from time_tracker import time_tracker as tcc
 
 class extractor:
@@ -190,6 +190,96 @@ class extractor:
             
             self.tc.interval_stop('Detect objects in frame',frame_accepted)
             
+        print('Frames processed :', i)
+        print('Overall Processing speed per image', (total_duration)/i)
+        print('Total duration:',total_duration)
+        cap.release()
+        cv2.destroyAllWindows()
+        return output,total_duration,successful
+
+
+def extract_frames_threaded(self,detector, input_file, class_labels, interval=None, dest_dir='.',visualize=False):# interval if specified should be in terms of seconds
+        self.tc.note_time('Load video file for frame extraction','begin','load_video_file')
+        print('Detection Algorithm:%s\nInput File: %s\nIntervals at which to detect: %r seconds' % (detector.name, input_file, interval))
+        interval = interval * 1000  # convert to milliseconds
+        target_interval = interval
+        cap = cv2.VideoCapture(input_file)
+        
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frameCount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        video_duration = frameCount/fps
+        self.add_data_tts({'video_duration':video_duration})
+
+        file_size = round(os.stat(input_file).st_size/1048576) #convert to Mbs
+        self.add_data_tts({'video_file_size':file_size})
+
+        output = {}  # format: File name : [list of matched labels]
+        if (cap.isOpened() == False):
+            print("Error opening video file", input_file)
+        i = 0
+
+        successful = 0
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        input_file_name = '.'.join(input_file.split('.')[:-1])
+        total_duration = 0
+        input_file_name = input_file_name.replace("\\ ", " ")
+
+        if dest_dir[-1] != '/':
+            dest_dir = dest_dir + '/'
+
+        self.tc.note_time('Load video file for frame extraction','end')
+        
+        if not cap.isOpened():
+            return None,None
+        
+        cap.set(cv2.CAP_PROP_POS_MSEC, target_interval)
+        #have batch size like 8 and a higher queue size maybe
+        vq = Videoqueue(cap,batch_size=4,queue_size=10,interval=interval)
+        vq.start()
+        while True:
+            
+            self.tc.interval_start('Fetch frame','fetch_frame')
+            frames = vq.get()
+            n = len(frames)
+            
+            if not n:
+                break
+            
+            opfnames = []
+            
+            for k in range(n):
+                opfname=''
+                if interval:
+                    opfname = input_file_name+'-'+str(int(interval*i/1000)).rjust(4,'0')+'s.jpg'
+                else:
+                    opfname = input_file_name + '-'+str(int(i/fps))+':'+str(i % fps)+'.jpg'
+                opfnames.append(opfname)
+                i+=1
+            self.tc.interval_stop('Fetch frame')
+            
+            t1 = time.time()
+            results = list(map(lambda k: detector.detect(frames[k], dest_dir+opfnames[k], class_labels,
+                visualize=visualize),list(range(n))))
+            duration = time.time()-t1
+
+            od = round(duration /4,4)
+            total_duration+=duration
+            successes = []
+            k=0
+            for result in results:
+                frame_accepted = False
+                if result and result['labels_matched']:
+                    result.update({'time': od})
+                    output.update({opfname[k]: result})
+                    successful += 1
+                    frame_accepted = True
+                else:
+                    print(' - No labels matched. Frame rejected')
+                k+=1
+                successes.append(frame_accepted)
+            
+            self.tc.add_intervals('Detect objects in frame','detect',[od]*n,sucesses)
+          
         print('Frames processed :', i)
         print('Overall Processing speed per image', (total_duration)/i)
         print('Total duration:',total_duration)

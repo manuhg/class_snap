@@ -19,17 +19,25 @@ class time_tracker:
         diff = lst[-1][col]-lst[0][col]
         return diff
 
-    def interval_start(self,what,kv): #to measure time of repeating events
+    def add_intervals(what,kv,times,successes):
         if not self.intervals.get(what):
             self.intervals[what]={'index':self.ctr,'info':[],'success':[]}
             self.ctr += 1
-        self.intervals[what]['tmp']=time()
+        
+        self.intervals[what]['info']+ = times
+        self.intervals[what]['success']+ = successes
+
+    def interval_start(self,what,kv,timestamp=''): #to measure time of repeating events
+        if not self.intervals.get(what):
+            self.intervals[what]={'index':self.ctr,'info':[],'success':[]}
+            self.ctr += 1
+        self.intervals[what]['tmp'+timestamp]=time()
         self.intervals[what]['key']=kv
 
-    def interval_stop(self,what,success=None): #kv is index name
+    def interval_stop(self,what,success=None,timestamp=''): #kv is index name
         if not self.intervals.get(what):
             return
-        self.intervals[what]['info'].append(time()-self.intervals[what]['tmp'])
+        self.intervals[what]['info'].append(time()-self.intervals[what]['tmp'+timestamp])
         self.intervals[what]['success'].append(success)
         self.intervals[what]['tmp'] = None
 
