@@ -229,4 +229,4 @@ def generate_report():
     else:
         generate_report_f()
 if __name__=="__main__":
-    #generate_report()
+    generate_report()
