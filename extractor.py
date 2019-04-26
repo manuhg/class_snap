@@ -55,7 +55,7 @@ class extractor:
                 input_file = filename
             else:
                 print('Not a valid yotube video url or unable to download video from url')
-                return
+                return None,None
             self.tc.note_time('Download video from Youtube','end')
         exec_cmd('mkdir '+tmpdir)
         

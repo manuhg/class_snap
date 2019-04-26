@@ -95,6 +95,9 @@ def main():
             zip_name_ = zip_name[:zip_name.rfind('.')]+ name + '.zip'
             print(input_video_file,class_labels_to_filter,interval,zip_name)
             output,total_duration = extractor_.process(input_video_file,class_labels_to_filter,interval,zip_name=zip_name_,visualize=visualize,dest_dir=output_dir)
+            if output is None:
+                print(input_video_file,' WAS NOT PROCESSED')
+                return
             generate_report()
             ground_truth_ann_file = '.'.join(os.path.basename(input_video_file).split('.')[:-1])+'-every_'+str(interval)+'s.json'
             #ground_truth = get_ground_truth_ann(annotations_dir+ground_truth_ann_file)
