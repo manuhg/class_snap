@@ -151,7 +151,7 @@ def plot_data_for_file(data_ex,ints_ex,ints_dm,file_index = 0,cols_to_drop=['nam
     sns.lineplot(x="frame",y="time taken per frame",style="type", data=df,ax=lax)
     return fig
 
-def generate_report():
+def generate_report_f():
     sns.set()
     df_files = ['detection_model-time.json','extractor-time.json']
     output_data_dict_file = 'output_data.json' 
@@ -222,6 +222,11 @@ def generate_report():
 
     save_figs_as_pdf([fig1,fig2],'Report.pdf')
 
+def generate_report():
+    use_jupyter = True
+    if use_jupyter:
+        print(os.popen('jupyter nbconvert --execute Plot_data.ipynb').read())
+    else:
+        generate_report_f()
 if __name__=="__main__":
     #generate_report()
-    print(os.popen('jupyter nbconvert --execute Plot_data.ipynb').read())
