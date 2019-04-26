@@ -148,9 +148,7 @@ def save_dicts_to_file(data_dict,filename):
         df = {}
         df[index] = data_dict
         if file_dict:
-          ks = file_dict.keys()
-          ks.sort()
-          index = int(ks[-1])+1
+          index = len(file_dict)+1
           df = file_dict
         try:
             df[index] = data_dict
