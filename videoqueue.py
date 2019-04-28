@@ -3,11 +3,11 @@ import threading
 import Queue
 import cv2
 class Videoqueue:
-    def __init__(self,cap,batch_size=8,queue_size=4,interval=None):
+    def __init__(self,cap,batch_size=16,queue_size=10,interval=None):
         self.batch_size = batch_size #num of frames every item in the queue will contain at max
         self.cap = cap
         self.queue = Queue() #it is a queue of sets of frames, each set has batch_size number of frames
-        self.lock =  threading.Lock()
+        #self.lock =  threading.Lock()
         self.finished = False
         self.started = False
         self.queue_size = queue_size
@@ -26,15 +26,17 @@ class Videoqueue:
         return self
     
     def stop(self):
-        self.thread.join()
+        try:
+            self.thread.join()
+        except Exception as e:
+            print(e)
     
     def __del__(self):
         self.stop()
 
     def get(self):
-        with self.lock:
-            return self.queue.get_nowait()
-
+        #with self.lock:
+            return self.queue.get(block=True)
     def run(self):
         while not self.finished:
             self.fill_queue()
@@ -45,8 +47,8 @@ class Videoqueue:
     def fill_queue(self):
         batch = []
         
-        with self.lock:
-            qs = self.queue.qsize()
+        #with self.lock:
+        qs = self.queue.qsize()
         
         if qs<self.queue_size and not self.finished:
             for _ in range(self.queue_size-qs):

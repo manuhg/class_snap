@@ -198,7 +198,7 @@ class extractor:
         return output,total_duration,successful
 
 
-def extract_frames_threaded(self,detector, input_file, class_labels, interval=None, dest_dir='.',visualize=False):# interval if specified should be in terms of seconds
+    def extract_frames_threaded(self,detector, input_file, class_labels, interval=None, dest_dir='.',visualize=False):# interval if specified should be in terms of seconds
         self.tc.note_time('Load video file for frame extraction','begin','load_video_file')
         print('Detection Algorithm:%s\nInput File: %s\nIntervals at which to detect: %r seconds' % (detector.name, input_file, interval))
         interval = interval * 1000  # convert to milliseconds
@@ -216,7 +216,7 @@ def extract_frames_threaded(self,detector, input_file, class_labels, interval=No
         output = {}  # format: File name : [list of matched labels]
         if (cap.isOpened() == False):
             print("Error opening video file", input_file)
-        i = 0
+        i = 1
 
         successful = 0
         fps = cap.get(cv2.CAP_PROP_FPS)
@@ -247,6 +247,7 @@ def extract_frames_threaded(self,detector, input_file, class_labels, interval=No
             n = len(frames)
             
             if not n:
+                print('No more frames received. Stopping')
                 break
             
             opfnames = []
@@ -289,4 +290,5 @@ def extract_frames_threaded(self,detector, input_file, class_labels, interval=No
         print('Total duration:',total_duration)
         cap.release()
         cv2.destroyAllWindows()
+        vq.stop()
         return output,total_duration,successful

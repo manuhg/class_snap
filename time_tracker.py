@@ -19,13 +19,13 @@ class time_tracker:
         diff = lst[-1][col]-lst[0][col]
         return diff
 
-    def add_intervals(what,kv,times,successes):
+    def add_intervals(self,what,kv,times,successes):
         if not self.intervals.get(what):
             self.intervals[what]={'index':self.ctr,'info':[],'success':[]}
             self.ctr += 1
         
-        self.intervals[what]['info']+ = times
-        self.intervals[what]['success']+ = successes
+        self.intervals[what]['info']+= times
+        self.intervals[what]['success']+= successes
 
     def interval_start(self,what,kv,timestamp=''): #to measure time of repeating events
         if not self.intervals.get(what):
