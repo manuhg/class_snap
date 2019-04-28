@@ -193,7 +193,7 @@ class extractor:
         print('Frames processed :', i)
         print('Overall Processing speed per image', (total_duration)/i)
         print('Total duration:',total_duration)
-        cap.release()``
+        cap.release()
         cv2.destroyAllWindows()
         return output,total_duration,successful
 
@@ -282,7 +282,7 @@ def extract_frames_threaded(self,detector, input_file, class_labels, interval=No
                 k+=1
                 successes.append(frame_accepted)
             
-            self.tc.add_intervals('Detect objects in frame','detect',[od]*n,sucesses)
+            self.tc.add_intervals('Detect objects in frame','detect',[od]*n,successes)
           
         print('Frames processed :', i)
         print('Overall Processing speed per image', (total_duration)/i)
