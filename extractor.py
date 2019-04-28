@@ -193,7 +193,7 @@ class extractor:
         print('Frames processed :', i)
         print('Overall Processing speed per image', (total_duration)/i)
         print('Total duration:',total_duration)
-        cap.release()
+        cap.release()``
         cv2.destroyAllWindows()
         return output,total_duration,successful
 
@@ -237,9 +237,13 @@ def extract_frames_threaded(self,detector, input_file, class_labels, interval=No
         vq = Videoqueue(cap,batch_size=4,queue_size=10,interval=interval)
         vq.start()
         while True:
-            
+            frames = []
             self.tc.interval_start('Fetch frame','fetch_frame')
-            frames = vq.get()
+            try:
+                frames = vq.get()
+            except Exception as e:
+                print(e)
+            
             n = len(frames)
             
             if not n:

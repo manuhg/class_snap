@@ -1,5 +1,7 @@
+from __future__ import print_function
 import threading
-
+import Queue
+import cv2
 class Videoqueue:
     def __init__(self,cap,batch_size=8,queue_size=4,interval=None):
         self.batch_size = batch_size #num of frames every item in the queue will contain at max
@@ -12,7 +14,7 @@ class Videoqueue:
         if interval:
             self.target_interval = 0
             self.interval = interval
-    
+        
     def start(self):
         if self.started:
             print('Video capture thread is already started')
@@ -22,38 +24,41 @@ class Videoqueue:
         self.thread = threading.Thread(target=self.run, args=())
         self.thread.start()
         return self
-        return
-    
-    def get(self):
-        return self.queue.get()
-
-    def run():
-        while not self.finished:
-            self.fill_queue()
-    
-    def finish(self):
-        self.finished = True
     
     def stop(self):
         self.thread.join()
+    
+    def __del__(self):
+        self.stop()
 
-    def fill_queue(self,interval):
+    def get(self):
+        with self.lock:
+            return self.queue.get_nowait()
+
+    def run(self):
+        while not self.finished:
+            self.fill_queue()
+    
+    # def finish(self):
+    #     self.finished = True
+
+    def fill_queue(self):
         batch = []
         
         with self.lock:
-            qs = self.queue.size()
+            qs = self.queue.qsize()
         
         if qs<self.queue_size and not self.finished:
-            for i in range(self.queue_size-qs):
-                for j in range(batch_size):
+            for _ in range(self.queue_size-qs):
+                for _ in range(self.batch_size):
 
                     if self.interval:
-                        cap.set(cv2.CAP_PROP_POS_MSEC, target_interval)
-                        target_interval += interval
+                        self.cap.set(cv2.CAP_PROP_POS_MSEC, self.target_interval)
+                        self.target_interval += self.interval
                     ret,frame = self.cap.read()
                     if not ret:
-                        self.finish()
+                        self.finished = True
                     else:
                         batch.append(frame)
-                self.queue.put(batch)
+                self.queue.put_nowait(batch)
 
