@@ -1,6 +1,6 @@
 from __future__ import print_function
 import threading
-import Queue
+from Queue import Queue
 import cv2
 class Videoqueue:
     def __init__(self,cap,batch_size=16,queue_size=10,interval=None):

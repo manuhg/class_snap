@@ -60,7 +60,7 @@ class extractor:
         exec_cmd('mkdir '+tmpdir)
         
         #################### detection / extraction ####################
-        output,total_duration,successful = self.extract_frames(self.detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=tmpdir,visualize=visualize)
+        output,total_duration,successful = self.extract_frames_threaded(self.detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=tmpdir,visualize=visualize)
         save_dicts_to_file(output,'output_data.json')
         self.output = output
         if successful<1:
@@ -240,7 +240,8 @@ class extractor:
             frames = []
             self.tc.interval_start('Fetch frame','fetch_frame')
             try:
-                frames = vq.get()
+                if not vq.finished and not vq.queue.empty():
+                    frames = vq.get()
             except Exception as e:
                 print(e)
             
