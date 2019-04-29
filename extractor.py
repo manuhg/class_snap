@@ -217,6 +217,7 @@ class extractor:
         if (cap.isOpened() == False):
             print("Error opening video file", input_file)
         i = 1
+        fc = 0 #frame count. same as i
 
         successful = 0
         fps = cap.get(cv2.CAP_PROP_FPS)
@@ -241,6 +242,8 @@ class extractor:
             self.tc.interval_start('Fetch frame','fetch_frame')
             try:
                 if not vq.finished and not vq.queue.empty():
+                    print('Done receiving frames')
+                else:
                     frames = vq.get()
             except Exception as e:
                 print(e)
@@ -274,6 +277,7 @@ class extractor:
             k=0
             for result in results:
                 frame_accepted = False
+                print('Frame: ', fc, end=' ')
                 if result and result['labels_matched']:
                     result.update({'time': od})
                     output.update({opfname[k]: result})

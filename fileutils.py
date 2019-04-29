@@ -17,7 +17,8 @@ def import_pytube():
 def download_youtube_video(url):
     if not import_pytube():
         print('instaling pytube')
-        exec_cmd('pip install pytube')
+        #exec_cmd('pip install pytube')
+        exec_cmd('pip install git+https://github.com/manuhg/pytube.git')
         if not import_pytube():
             print('Fatal! unable to install or import pytube!. Quitting.')
             return False

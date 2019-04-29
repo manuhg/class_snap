@@ -26,6 +26,7 @@ class time_tracker:
         
         self.intervals[what]['info']+= times
         self.intervals[what]['success']+= successes
+        self.intervals[what]['key']=kv
 
     def interval_start(self,what,kv,timestamp=''): #to measure time of repeating events
         if not self.intervals.get(what):
