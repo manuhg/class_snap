@@ -10,6 +10,7 @@ class Videoqueue:
         #self.lock =  threading.Lock()
         self.finished = False
         self.started = False
+        self.len = 0
         self.queue_size = queue_size
         if interval:
             self.target_interval = 0
@@ -36,6 +37,8 @@ class Videoqueue:
 
     def get(self):
         #with self.lock:
+        if self.len>0:
+            self.len-=1
             return self.queue.get(block=True)
     def run(self):
         while not self.finished:
@@ -62,5 +65,6 @@ class Videoqueue:
                         self.finished = True
                     else:
                         batch.append(frame)
+                self.len+=1
                 self.queue.put_nowait(batch)
 
