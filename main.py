@@ -49,6 +49,7 @@ def build_args_parser():
     parser.add_argument('-o','--output_file', dest='zip_name',help='Output zip name', default='detections.zip', type=str)
     parser.add_argument('-vz','--visualize', dest='visualize',help='visualize annotations in output images', default='', type=str)
     parser.add_argument('-cm','--compare_models', dest='compare_models',help='compare models by running given input', default='', type=str)
+    parser.add_argument('-nmt','--nmt', dest='nmt',help="Disable multi threading", default='', type=str)
 
     return parser
     
@@ -71,6 +72,8 @@ def main():
         annotations_dir = annotations_dir+'/' if annotations_dir[-1]!='/' else annotations_dir
         input_video_files, class_labels_to_filter = get_input_data(input_video, class_labels_file,input_videos_dir)
         visualize = args.visualize
+        nmt = args.nmt
+        nmt = True if nmt else False
         compare_models_ = args.compare_models
 
         if len(input_video_files)<1:
@@ -94,7 +97,7 @@ def main():
             name = '-'+name if name else name
             zip_name_ = zip_name[:zip_name.rfind('.')]+ name + '.zip'
             print(input_video_file,class_labels_to_filter,interval,zip_name)
-            output,total_duration = extractor_.process(input_video_file,class_labels_to_filter,interval,zip_name=zip_name_,visualize=visualize,dest_dir=output_dir)
+            output,total_duration = extractor_.process(input_video_file,class_labels_to_filter,interval,zip_name=zip_name_,visualize=visualize,dest_dir=output_dir,no_multi_thread=nmt)
             if output is None:
                 print(input_video_file,' WAS NOT PROCESSED')
                 return

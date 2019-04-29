@@ -40,7 +40,7 @@ class extractor:
         self.tc.note_time('Load Object Detection Model','end')
         
 
-    def process(self,input_file,class_labels_to_filter_by,interval=1,dest_dir='output',zip_name='detections.zip',del_after=True,visualize=False):
+    def process(self,input_file,class_labels_to_filter_by,interval=1,dest_dir='output',zip_name='detections.zip',del_after=True,visualize=False,no_multi_thread=False):
         #################### pre process ####################
         tmpdir = 'tmp'
         self.class_labels_to_filter_by = class_labels_to_filter_by
@@ -60,7 +60,10 @@ class extractor:
         exec_cmd('mkdir '+tmpdir)
         
         #################### detection / extraction ####################
-        output,total_duration,successful = self.extract_frames_threaded(self.detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=tmpdir,visualize=visualize)
+        extractor_function = self.extract_frames_threaded
+        if no_multi_thread:
+            extractor_function = self.extract_frames
+        output,total_duration,successful = extractor_function(self.detector_model, input_file, class_labels_to_filter_by, interval=interval,dest_dir=tmpdir,visualize=visualize)
         save_dicts_to_file(output,'output_data.json')
         self.output = output
         if successful<1:
@@ -277,7 +280,7 @@ class extractor:
             k=0
             for result in results:
                 frame_accepted = False
-                print('Frame: ', fc, end=' ')
+                print('\nFrame: ', fc, end=' ')
                 if result and result['labels_matched']:
                     result.update({'time': od})
                     output.update({opfname[k]: result})
@@ -286,10 +289,11 @@ class extractor:
                 else:
                     print(' - No labels matched. Frame rejected')
                 k+=1
+                fc+=1
                 successes.append(frame_accepted)
             
             self.tc.add_intervals('Detect objects in frame','detect',[od]*n,successes)
-          
+        
         print('Frames processed :', i)
         print('Overall Processing speed per image', (total_duration)/i)
         print('Total duration:',total_duration)
