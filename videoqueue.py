@@ -35,8 +35,16 @@ class Videoqueue:
         self.stop()
 
     def get(self):
+        frames = []
         #with self.lock:
-            return self.queue.get(block=True)
+        if not self.finished:
+            frames = self.queue.get(block=True,timeout=3)
+        else:
+            frames = self.queue.get(block=False)
+        self.queue.task_done()
+        frames = [] if frames is None else frames
+        return frames
+    
     def run(self):
         while not self.finished:
             self.fill_queue()
@@ -49,18 +57,26 @@ class Videoqueue:
         
         #with self.lock:
         qs = self.queue.qsize()
+        if  self.finished:
+            return
         
-        if qs<self.queue_size and not self.finished:
+        if qs<self.queue_size:
             for _ in range(self.queue_size-qs):
                 for _ in range(self.batch_size):
-
+                    if self.finished:
+                        break
+                    
                     if self.interval:
                         self.cap.set(cv2.CAP_PROP_POS_MSEC, self.target_interval)
                         self.target_interval += self.interval
                     ret,frame = self.cap.read()
                     if not ret:
+                        #with self.lock:
                         self.finished = True
                     else:
                         batch.append(frame)
-                self.queue.put_nowait(batch)
+                self.queue.put(batch)
+                batch = []
+                if self.finished:
+                    return
 

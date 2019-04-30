@@ -188,6 +188,7 @@ class extractor:
                 output.update({opfname: result})
                 successful += 1
                 frame_accepted = True
+                print('classes detected:',result['output']['labels_detected'],'classes matched:',result['labels_matched'])
             else:
                 print(' - No labels matched. Frame rejected')
             
@@ -244,7 +245,7 @@ class extractor:
             frames = []
             self.tc.interval_start('Fetch frame','fetch_frame')
             try:
-                if not vq.finished and not vq.queue.empty():
+                if vq.finished and vq.queue.empty():
                     print('Done receiving frames')
                 else:
                     frames = vq.get()
@@ -278,6 +279,7 @@ class extractor:
             total_duration+=duration
             successes = []
             k=0
+            fc = 1
             for result in results:
                 frame_accepted = False
                 print('\nFrame: ', fc, end=' ')
@@ -286,6 +288,7 @@ class extractor:
                     output.update({opfname[k]: result})
                     successful += 1
                     frame_accepted = True
+                    print('classes detected:',result['output']['labels_detected'],'classes matched:',result['labels_matched'])
                 else:
                     print(' - No labels matched. Frame rejected')
                 k+=1
