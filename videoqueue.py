@@ -12,7 +12,7 @@ class Videoqueue:
         self.started = False
         self.queue_size = queue_size
         if interval:
-            self.target_interval = 0
+            self.target_interval = interval
             self.interval = interval
         
     def start(self):
@@ -38,7 +38,7 @@ class Videoqueue:
         frames = []
         #with self.lock:
         if not self.finished:
-            frames = self.queue.get(block=True,timeout=3)
+            frames = self.queue.get(block=True,timeout=1)
         else:
             frames = self.queue.get(block=False)
         self.queue.task_done()

@@ -69,7 +69,6 @@ class extractor:
         if successful<1:
             print('NO OBJECTS SPECIFIED WERE DETECTED!. Hence no annotations to be saved')
             exit()
-        
         #################### annotation ####################
         self.tc.note_time('Save output as annotations','begin','save_annotations')
         json_files,failures,annotated_output = save_as_annotations(output,tmpdir)
@@ -130,6 +129,9 @@ class extractor:
         interval = interval * 1000  # convert to milliseconds
         target_interval = interval
         cap = cv2.VideoCapture(input_file)
+        if (cap.isOpened() == False):
+            print("Error opening video file", input_file)
+            return None,None,None
         
         fps = cap.get(cv2.CAP_PROP_FPS)
         frameCount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -140,12 +142,10 @@ class extractor:
         self.add_data_tts({'video_file_size':file_size})
 
         output = {}  # format: File name : [list of matched labels]
-        if (cap.isOpened() == False):
-            print("Error opening video file", input_file)
         i = 0
 
         successful = 0
-        fps = cap.get(cv2.CAP_PROP_FPS)
+        
         input_file_name = '.'.join(input_file.split('.')[:-1])
         total_duration = 0
         input_file_name = input_file_name.replace("\\ ", " ")
@@ -206,9 +206,13 @@ class extractor:
         self.tc.note_time('Load video file for frame extraction','begin','load_video_file')
         print('Detection Algorithm:%s\nInput File: %s\nIntervals at which to detect: %r seconds' % (detector.name, input_file, interval))
         interval = interval * 1000  # convert to milliseconds
-        target_interval = interval
         cap = cv2.VideoCapture(input_file)
         
+        if (cap.isOpened() == False):
+            print("Error opening video file", input_file)
+            return None,None,None
+        
+        output = {}  # format: File name : [list of matched labels]
         fps = cap.get(cv2.CAP_PROP_FPS)
         frameCount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         video_duration = frameCount/fps
@@ -217,14 +221,9 @@ class extractor:
         file_size = round(os.stat(input_file).st_size/1048576) #convert to Mbs
         self.add_data_tts({'video_file_size':file_size})
 
-        output = {}  # format: File name : [list of matched labels]
-        if (cap.isOpened() == False):
-            print("Error opening video file", input_file)
-        i = 1
-        fc = 0 #frame count. same as i
-
+        i,fc = 1, 1 #frame count. same as i
+       
         successful = 0
-        fps = cap.get(cv2.CAP_PROP_FPS)
         input_file_name = '.'.join(input_file.split('.')[:-1])
         total_duration = 0
         input_file_name = input_file_name.replace("\\ ", " ")
@@ -232,15 +231,10 @@ class extractor:
         if dest_dir[-1] != '/':
             dest_dir = dest_dir + '/'
 
-        self.tc.note_time('Load video file for frame extraction','end')
-        
-        if not cap.isOpened():
-            return None,None
-        
-        cap.set(cv2.CAP_PROP_POS_MSEC, target_interval)
-        #have batch size like 8 and a higher queue size maybe
         vq = Videoqueue(cap,batch_size=4,queue_size=10,interval=interval)
         vq.start()
+        self.tc.note_time('Load video file for frame extraction','end')
+
         while True:
             frames = []
             self.tc.interval_start('Fetch frame','fetch_frame')
@@ -269,9 +263,10 @@ class extractor:
                 opfnames.append(opfname)
                 i+=1
             self.tc.interval_stop('Fetch frame')
-            
+           
+
             t1 = time.time()
-            results = list(map(lambda k: detector.detect(frames[k], dest_dir+opfnames[k], class_labels,
+            results = list(map(lambda j: detector.detect(frames[j], dest_dir+opfnames[j], class_labels,
                 visualize=visualize),list(range(n))))
             duration = time.time()-t1
 
@@ -279,13 +274,12 @@ class extractor:
             total_duration+=duration
             successes = []
             k=0
-            fc = 1
             for result in results:
                 frame_accepted = False
-                print('\nFrame: ', fc, end=' ')
+                print('Frame: ', fc, end=' ')
                 if result and result['labels_matched']:
                     result.update({'time': od})
-                    output.update({opfname[k]: result})
+                    output.update({opfnames[k]: result})
                     successful += 1
                     frame_accepted = True
                     print('classes detected:',result['output']['labels_detected'],'classes matched:',result['labels_matched'])
@@ -298,6 +292,7 @@ class extractor:
             self.tc.add_intervals('Detect objects in frame','detect',[od]*n,successes)
         
         print('Frames processed :', i)
+        
         print('Overall Processing speed per image', (total_duration)/i)
         print('Total duration:',total_duration)
         cap.release()
